@@ -1,0 +1,9 @@
+{
+  "name": "Resumify",
+  "description": "Free AI-Powered Resume & CV Builder to create, edit, optimize, and export professional, job-ready resumes.",
+  "Overwrite": true,
+  "TargetFile": "/metadata.json",
+  "toolAction: ": "Updating metadata.json",
+  "toolAction": "Updating metadata.json",
+  "toolSummary": "Updating app metadata"
+}
