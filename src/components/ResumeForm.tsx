@@ -808,40 +808,59 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
 
         {/* STEP 6: Customize & Theme select */}
         {currentStep === 6 && (
-          <div className="space-y-6 animate-fadeIn">
-            <h3 className="text-base font-bold text-slate-900 border-b pb-2">Step 6: Customize Resume Shell & Template theme</h3>
+          <div className="space-y-7 animate-fadeIn">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                🎨 Real-Time Layout & Style Architect
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Customize shell structures, spacing, and typography to generate your unique professional signature. Combine parameters to access over <strong>1,600+ dynamic layout custom configurations</strong>.
+              </p>
+            </div>
 
-            {/* Template Selection */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-700 block">Select Layout Template</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Custom Layout template */}
+            <div className="space-y-2 pb-5 border-b border-slate-100">
+              <label className="text-xs font-bold text-slate-700 block">1. Outer Shell Blueprint</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                 {[
-                  { id: "modern", title: "Modern Minimalist", desc: "Clean & high ATS-score layout" },
-                  { id: "professional", title: "Corporate Georgia", desc: "Elegant split sidebar corporate design" },
-                  { id: "creative", title: "Creative Grotesk", desc: "Stylish visual journey visual block layout" },
+                  { id: "modern", title: "Modern Minimalist", desc: "Clean & high ATS score corporate design" },
+                  { id: "professional", title: "Corporate Georgia", desc: "Elegant split sidebar traditional layout" },
+                  { id: "creative", title: "Creative Grotesk", desc: "Stylish tech-forward block arrangements" },
                   { id: "student", title: "Fresh Academic", desc: "Showcases education & sandbox projects first" },
                 ].map((tpl) => (
                   <button
                     key={tpl.id}
                     type="button"
-                    onClick={() => onChange({ ...data, selectedTemplate: tpl.id as any })}
-                    className={`p-4 rounded-xl text-left border-2 transition active:scale-[0.98] ${
+                    onClick={() => onChange({ ...data, selectedTemplate: tpl.id })}
+                    className={`p-3 rounded-lg text-left border-2 transition active:scale-[0.98] ${
                       data.selectedTemplate === tpl.id 
                         ? "border-blue-700 bg-blue-50/20" 
                         : "border-slate-100 hover:border-slate-200"
                     }`}
                   >
                     <span className="text-xs font-bold block text-slate-800">{tpl.title}</span>
-                    <span className="text-[10px] text-slate-400 mt-1 block leading-relaxed">{tpl.desc}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block leading-normal">{tpl.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Accent Color Selection */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-700 block">Accent Brand Color</label>
-              <div className="flex flex-wrap gap-2.5">
+            {/* Accent Color Selection & Custom hex input */}
+            <div className="space-y-3 pb-5 border-b border-slate-100">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-slate-700">2. Brand Accent Color Pairing</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">Dynamic Color Picker:</span>
+                  <input
+                    type="color"
+                    value={data.selectedColor || "#1e3a8a"}
+                    onChange={(e) => onChange({ ...data, selectedColor: e.target.value })}
+                    className="w-7 h-7 rounded border border-slate-200 cursor-pointer shadow-3xs"
+                    title="Infinite Color Picker Selector"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {[
                   { value: "#1e3a8a", name: "Deep Navy" },
                   { value: "#0d9488", name: "Teal Green" },
@@ -850,28 +869,159 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                   { value: "#7c3aed", name: "Neon Violet" },
                   { value: "#dc2626", name: "Ruby Red" },
                   { value: "#1f2937", name: "Slate Dark" },
+                  { value: "#065f46", name: "Forest Emerald" },
+                  { value: "#b45309", name: "Amber Gold" },
+                  { value: "#4338ca", name: "Royal Indigo" },
                 ].map((color) => (
                   <button
                     key={color.value}
                     type="button"
                     onClick={() => onChange({ ...data, selectedColor: color.value })}
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-semibold transition active:scale-[0.95] flex items-center gap-1.5 border ${
+                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-semibold transition active:scale-[0.95] flex items-center gap-1.5 border ${
                       data.selectedColor === color.value 
-                        ? "border-slate-900 shadow-sm text-slate-900 bg-slate-50" 
+                        ? "border-slate-900 shadow-3xs text-slate-900 bg-slate-50" 
                         : "border-slate-150 text-slate-500 hover:bg-slate-50"
                     }`}
                   >
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color.value }} />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color.value }} />
                     {color.name}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Notice */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100/50 text-[11px] text-slate-500 leading-relaxed max-w-xl">
-              <span className="font-bold text-slate-700 block mb-1">💡 Professional Printing Tips:</span>
-              Once you finish editing, verify all details are complete. Resumify prints precisely formatted PDF resumes directly using vector pipelines. Ensure Margins are standard and Background Graphics are enabled in your chrome/safari printing dialogue for a spotless output representation!
+            {/* Typography selection tab */}
+            <div className="space-y-2 pb-5 border-b border-slate-100">
+              <label className="text-xs font-bold text-slate-700 block">3. Premium Typography Pairing</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                {[
+                  { value: "Inter, sans-serif", name: "Inter (Corporate Pro)" },
+                  { value: "Space Grotesk, sans-serif", name: "Space Grotesk (Tech/Design)" },
+                  { value: "Outfit, sans-serif", name: "Outfit (Clean Geometric)" },
+                  { value: "Georgia, serif", name: "Georgia (Classic Academic)" },
+                  { value: "Lora, serif", name: "Lora (Polished Literary)" },
+                  { value: "Playfair Display, serif", name: "Playfair (High-End Elegant)" },
+                  { value: "JetBrains Mono, monospace", name: "JetBrains (Technical Dev)" },
+                ].map((font) => (
+                  <button
+                    key={font.value}
+                    type="button"
+                    onClick={() => onChange({ ...data, selectedFont: font.value })}
+                    className={`p-2.5 rounded-lg text-left border transition active:scale-[0.98] ${
+                      data.selectedFont === font.value 
+                        ? "border-blue-700 bg-blue-50/10 text-blue-800 font-bold" 
+                        : "border-slate-100 text-slate-600 hover:border-slate-250"
+                    }`}
+                    style={{ fontFamily: font.value }}
+                  >
+                    <span className="text-xs truncate block">{font.name}</span>
+                    <span className="text-[9px] text-slate-400 font-normal block mt-0.5">Aa Bb Cc 123</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Layout Density Spacer & Bullet style */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5 border-b border-slate-100">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block">4. A4 Grid Spacing Density</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "compact", name: "Compact (Single Page)" },
+                    { id: "comfortable", name: "Comfortable (Standard)" },
+                    { id: "spacious", name: "Spacious (Elegant)" },
+                    { id: "atmospheric", name: "Atmospheric" },
+                  ].map((density) => (
+                    <button
+                      key={density.id}
+                      type="button"
+                      onClick={() => onChange({ ...data, selectedDensity: density.id as any })}
+                      className={`p-2 rounded-md text-center text-[10px] font-bold border transition ${
+                        data.selectedDensity === density.id 
+                          ? "border-slate-900 bg-slate-900 text-white" 
+                          : "border-slate-100 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {density.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block">5. Bullet Points Graphic Style</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "disc", name: "• Standard Discs" },
+                    { id: "square", name: "▪ Solid Squares" },
+                    { id: "dash", name: "― Clean Dashes" },
+                    { id: "accent-dot", name: "✨ Custom Dots" },
+                  ].map((bullet) => (
+                    <button
+                      key={bullet.id}
+                      type="button"
+                      onClick={() => onChange({ ...data, selectedBulletStyle: bullet.id as any })}
+                      className={`p-2 rounded-md text-center text-[10px] font-bold border transition ${
+                        data.selectedBulletStyle === bullet.id 
+                          ? "border-slate-900 bg-slate-900 text-white" 
+                          : "border-slate-100 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {bullet.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Border styling & Profile photo config */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5 border-b border-slate-100">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block">6. Shell Accent Borders</label>
+                <select
+                  value={data.selectedBorderAccent || "top-bar"}
+                  onChange={(e) => onChange({ ...data, selectedBorderAccent: e.target.value as any })}
+                  className="w-full text-xs font-semibold px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="none">Frameless (Clean Minimal)</option>
+                  <option value="top-bar">A4 Top Color Ribbon Accent</option>
+                  <option value="left-bar">Left Sidebar Accent Line</option>
+                  <option value="frame">Surrounding Geometric Margins Accent Frame</option>
+                  <option value="accent-bottom">Bottom Signature Underline Bar</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block font-sans">7. Portrait Display Frame</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!data.showAvatar}
+                      onChange={(e) => onChange({ ...data, showAvatar: e.target.checked })}
+                      className="w-3.5 h-3.5 text-blue-600 border-slate-2 border-2 rounded focus:ring-blue-500 cursor-pointer"
+                    />
+                    Display Picture (Avatar)
+                  </label>
+                  {data.showAvatar && (
+                    <select
+                      value={data.selectedAvatarShape || "circle"}
+                      onChange={(e) => onChange({ ...data, selectedAvatarShape: e.target.value as any })}
+                      className="text-[10px] font-semibold px-2 py-1 bg-white border border-slate-200 rounded-md focus:outline-none"
+                    >
+                      <option value="circle">Circular Framing</option>
+                      <option value="rounded">Soft Square</option>
+                      <option value="sharp">Sharp Polygon</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Print advice notices */}
+            <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-[11px] text-slate-600 leading-relaxed max-w-xl">
+              <span className="font-bold text-blue-800 block mb-1">💡 Pro Printing Tips:</span>
+              Your resume is designed for exact A4 proportions (21cm × 29.7cm). Clicking the PDF download print button opens your browser's vector pipeline. Ensure <strong>Background graphics</strong> is enabled in your print manager configuration to include accent colors and ribbon dividers correctly.
             </div>
           </div>
         )}

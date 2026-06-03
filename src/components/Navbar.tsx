@@ -42,7 +42,6 @@ export default function Navbar({ currentTab, onTabChange, session, onOpenAuth, o
             { id: "home", label: "Home", icon: Compass },
             { id: "builder", label: "Resume Builder", icon: FileText },
             { id: "ai-builder", label: "Full AI Architect", icon: Cpu },
-            { id: "parser", label: "PDF Parse & Edit", icon: Sparkles },
             { id: "about", label: "About", icon: HelpCircle },
           ].map((item) => {
             const IconComponent = item.icon;

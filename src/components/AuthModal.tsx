@@ -16,9 +16,9 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail = "meakashsunilkk@gmail.com" }: AuthModalProps) {
   const [isLoginTab, setIsLoginTab] = useState(true);
-  const [email, setEmail] = useState(userEmail);
-  const [password, setPassword] = useState("••••••••");
-  const [fullName, setFullName] = useState("Akash Sunil");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -36,15 +36,31 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
       return;
     }
 
+    // Heuristically construct a clean name if they register or login
+    let resolvedName = fullName.trim() || "Guest User";
+    if (isLoginTab) {
+      if (email.toLowerCase().trim() === userEmail.toLowerCase().trim()) {
+        resolvedName = "Akash Sunil";
+      } else {
+        const emailPrefix = email.split("@")[0] || "";
+        if (emailPrefix) {
+          resolvedName = emailPrefix
+            .split(/[._-]/)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        }
+      }
+    }
+
     // Simulate database lookup/creation
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
         onLoginSuccess({
-          email,
-          fullName: isLoginTab ? (email === userEmail ? "Akash Sunil" : "Guest User") : fullName,
+          email: email.toLowerCase().trim(),
           isLoggedIn: true,
+          fullName: resolvedName,
           avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(email)}`,
         });
         setSuccess(false);

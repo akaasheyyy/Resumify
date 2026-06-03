@@ -8,7 +8,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ResumeForm from "./components/ResumeForm";
 import ResumePreview from "./components/ResumePreview";
-import ResumeParser from "./components/ResumeParser";
 import AiBuilder from "./components/AiBuilder";
 import AuthModal from "./components/AuthModal";
 import { DEFAULT_RESUME_DATA } from "./data";
@@ -299,7 +298,7 @@ export default function App() {
 
             {/* Live Interactive Preview panel */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="flex justify-between items-center no-print">
+              <div className="flex justify-between items-center no-print bg-white p-4 rounded-xl border border-slate-100 shadow-3xs">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Real-Time PDF Visualizer</h3>
                   <p className="text-[10px] text-slate-400 font-semibold uppercase font-mono mt-0.5">Preset Theme: {resumeData.selectedTemplate} / Accent: {resumeData.selectedColor}</p>
@@ -308,11 +307,21 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handlePrintPdf}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition active:scale-[0.97] flex items-center gap-2 shadow-sm"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition active:scale-[0.97] hover:scale-[1.01] flex items-center gap-2 shadow-sm cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-sky-400" /> Download Premium PDF CV
                 </button>
               </div>
+
+              {/* Inline help helper banner specifically for Iframe sandbox instances */}
+              {typeof window !== "undefined" && window.self !== window.top && (
+                <div className="no-print p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-start gap-2 text-[11px] text-amber-800 leading-relaxed">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Iframe Viewer Detected:</span> If clicking the download button does not open your browser's PDF Print dialogue box, please click the <strong>Open in New Tab</strong> button located at the top-right corner of the browser workspace to trigger instant direct PDF rendering!
+                  </div>
+                </div>
+              )}
 
               {/* Rendering ResumePreview with Print Ref callback */}
               <ResumePreview data={resumeData} printRef={printRef} />
@@ -327,16 +336,6 @@ export default function App() {
               onGenerated={handleDataParsed} 
               onNavigateToBuilder={() => setCurrentTab("builder")}
               aiStatus={aiStatus}
-            />
-          </div>
-        )}
-
-        {/* TAB 4: PDF CV Ingestion Parser */}
-        {currentTab === "parser" && (
-          <div className="animate-fadeIn py-4">
-            <ResumeParser 
-              onParsed={handleDataParsed} 
-              onNavigateToBuilder={() => setCurrentTab("builder")}
             />
           </div>
         )}

@@ -77,4 +77,11 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
   ],
   selectedTemplate: "modern",
   selectedColor: "#1e3a8a", // Deep Blue default
+  selectedFont: "Inter, sans-serif",
+  selectedDensity: "comfortable",
+  selectedLayoutVariation: "classic",
+  selectedBulletStyle: "disc",
+  selectedBorderAccent: "top-bar",
+  showAvatar: false,
+  selectedAvatarShape: "circle",
 };

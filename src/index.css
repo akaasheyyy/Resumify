@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@400;500;600;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @layer base {
@@ -6,42 +7,96 @@
   }
 }
 
-/* Print Overrides for One-Click PDF Exports */
+/* Print Overrides for Spotless & Professional PDF Exports */
 @media print {
-  /* Hide all generic workspace chrome */
-  body, html, #root, main, header, footer, nav, button, .no-print {
-    background: none !important;
-    background-color: transparent !important;
+  /* Hide standard chrome and surrounding web items */
+  nav, footer, .no-print, [class*="no-print"], button, .auth-modal, #auth-modal {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+  }
+
+  /* Reset outer elements with pristine layouts for single-page printing */
+  html, body, #root {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 21cm !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
     box-shadow: none !important;
     border: none !important;
-    visibility: hidden !important;
-    height: auto !important;
-    overflow: visible !important;
+    background: transparent !important;
   }
 
-  /* Expose ONLY the resume paper block */
-  #printable-cv, #printable-cv * {
-    visibility: visible !important;
+  /* Expand column wrapping to fill page layout */
+  .lg\:col-span-7, .col-span-12 {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
+  /* Ensure the A4 sheet card is rendered beautifully in window print */
   #printable-cv {
+    display: block !important;
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 21cm !important;
-    min-height: 29.7cm !important;
+    width: 21cm !important; /* Force exact standard A4 width */
+    min-height: 29.7cm !important; /* Force exact standard A4 height */
     margin: 0 !important;
-    padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    z-index: 9999999 !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 0; /* Remove header/footer page lines */
   }
+}
+
+/* Custom spacing density utilities for A4 paper builders */
+.cv-density-compact {
+  padding: 1.25rem !important; /* 20px margins */
+}
+.cv-density-compact p, .cv-density-compact li {
+  line-height: 1.25 !important;
+  margin-top: 0.125rem !important;
+}
+.cv-density-compact .space-y-4 > * {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.cv-density-comfortable {
+  padding: 2rem !important; /* Standard 32px A4 margins */
+}
+
+.cv-density-spacious {
+  padding: 2.75rem !important; /* Generous 44px margins */
+}
+
+.cv-density-atmospheric {
+  padding: 3.5rem !important; /* Extreme 56px minimalist negative space margins */
 }
 
 /* Custom scrollbars */

@@ -65,8 +65,15 @@ export interface ResumeData {
   projects: Project[];
   certifications: Certification[];
   languages: Language[];
-  selectedTemplate: "modern" | "professional" | "creative" | "student";
+  selectedTemplate: string; // Dynamic template style
   selectedColor: string; // Accent color hex
+  selectedFont?: string; // Creative font pairing
+  selectedDensity?: "compact" | "comfortable" | "spacious" | "atmospheric"; // Margins & Spacing
+  selectedLayoutVariation?: "classic" | "split-sidebar" | "grid-tech" | "centered-bold" | "academic-harvard" | "minimal"; // Page layouts
+  selectedBulletStyle?: "disc" | "square" | "dash" | "accent-dot"; // Bullets graphics
+  selectedBorderAccent?: "none" | "top-bar" | "left-bar" | "frame" | "accent-bottom"; // Shell aesthetics
+  showAvatar?: boolean; // Avatar Toggle
+  selectedAvatarShape?: "circle" | "rounded" | "sharp"; // Avatar Frame
 }
 
 export interface UserSession {

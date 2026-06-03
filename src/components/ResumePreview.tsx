@@ -13,34 +13,104 @@ interface ResumePreviewProps {
 }
 
 export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
-  const { personal, education, experience, skills, projects, certifications, languages, selectedTemplate, selectedColor } = data;
+  const { 
+    personal, education, experience, skills, projects, certifications, languages, 
+    selectedTemplate, selectedColor, selectedFont, selectedDensity, selectedBulletStyle, 
+    selectedBorderAccent, showAvatar, selectedAvatarShape 
+  } = data;
 
-  // Render bullet points from newlines
+  // Spacing and Density wrapper padding solver
+  const getPaddingClass = () => {
+    switch (selectedDensity) {
+      case "compact": return "p-4 sm:p-5 text-[11px]";
+      case "spacious": return "p-11 sm:p-12 text-[13px]";
+      case "atmospheric": return "p-14 sm:p-16 text-sm";
+      case "comfortable":
+      default: return "p-8 sm:p-10 text-xs";
+    }
+  };
+
+  // Border Accent helper
+  const getBorderStyles = (): React.CSSProperties => {
+    const s: React.CSSProperties = {
+      fontFamily: selectedFont || "Inter, sans-serif",
+    };
+    if (selectedBorderAccent === "left-bar") {
+      s.borderLeft = `8px solid ${selectedColor}`;
+    } else if (selectedBorderAccent === "frame") {
+      s.border = `4px double ${selectedColor}`;
+    } else if (selectedBorderAccent === "accent-bottom") {
+      s.borderBottom = `8px solid ${selectedColor}`;
+    }
+    return s;
+  };
+
+  // Dynamic bullet lists formatting
   const renderBullets = (text: string) => {
     if (!text) return null;
     const lines = text.split("\n").filter(l => l.trim() !== "");
     if (lines.length <= 1 && !text.startsWith("-") && !text.startsWith("•")) {
       return <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">{text}</p>;
     }
+
+    let listClass = "list-disc pl-4";
+    let bulletChar = "";
+    if (selectedBulletStyle === "square") {
+      listClass = "list-[square] pl-4";
+    } else if (selectedBulletStyle === "dash") {
+      listClass = "list-none pl-1 space-y-1";
+      bulletChar = "― ";
+    } else if (selectedBulletStyle === "accent-dot") {
+      listClass = "list-none pl-1 space-y-1";
+      bulletChar = "✦ ";
+    }
+
     return (
-      <ul className="list-disc pl-4 space-y-1 mt-1 text-xs text-slate-600 leading-relaxed">
+      <ul className={`${listClass} space-y-1 mt-1 text-xs text-slate-600 leading-relaxed`}>
         {lines.map((line, idx) => {
-          const cleanLine = line.replace(/^[•\-\*\s]+/, "");
-          return <li key={idx}>{cleanLine}</li>;
+          const cleanLine = line.replace(/^[•\-\*\s\▪\✦\★]+/, "");
+          return (
+            <li key={idx} className="flex items-start gap-1">
+              {bulletChar && <span className="shrink-0 scale-90" style={{ color: selectedColor }}>{bulletChar}</span>}
+              <span className="flex-1">{cleanLine}</span>
+            </li>
+          );
         })}
       </ul>
     );
   };
 
+  // Avatar Image block rendering
+  const renderAvatar = () => {
+    if (!showAvatar) return null;
+    const shapeClass = 
+      selectedAvatarShape === "rounded" ? "rounded-xl" :
+      selectedAvatarShape === "sharp" ? "rounded-none border-2" : "rounded-full";
+    const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(personal.email || personal.fullName || "Akash")}`;
+    return (
+      <img
+        src={avatarUrl}
+        alt={personal.fullName || "Portrait"}
+        className={`w-16 h-16 object-cover bg-slate-50 border border-slate-200 shadow-3xs shrink-0 ${shapeClass}`}
+        style={{ borderColor: selectedColor }}
+      />
+    );
+  };
+
   // Modern Template
   const renderModern = () => (
-    <div className="p-8 bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className={`${getPaddingClass()} bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs relative`} style={{ fontFamily: selectedFont || "Inter, sans-serif" }}>
       {/* Header */}
       <div className="border-b-2 pb-6" style={{ borderColor: selectedColor }}>
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{personal.fullName || "Your Full Name"}</h1>
-        <p className="text-lg font-medium mt-1 uppercase tracking-wider" style={{ color: selectedColor }}>
-          {personal.jobTitle || "Professional Title"}
-        </p>
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{personal.fullName || "Your Full Name"}</h1>
+            <p className="text-lg font-medium mt-1 uppercase tracking-wider" style={{ color: selectedColor }}>
+              {personal.jobTitle || "Professional Title"}
+            </p>
+          </div>
+          {renderAvatar()}
+        </div>
 
         {/* Contact info Bar */}
         <div className="flex flex-wrap gap-y-2 gap-x-4 mt-4 text-[11px] text-slate-500">
@@ -214,16 +284,19 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
 
   // Professional (Corporate layout with sidebar on Left)
   const renderProfessional = () => (
-    <div className="flex max-w-[21cm] min-h-[29.7cm] bg-white shadow-xs" style={{ fontFamily: "Georgia, serif" }}>
+    <div className="flex max-w-[21cm] min-h-[29.7cm] bg-white shadow-xs" style={{ fontFamily: selectedFont || "Georgia, serif" }}>
       {/* Left Sidebar Accent column */}
-      <div className="w-[7cm] bg-slate-900 text-slate-100 p-6 flex flex-col justify-between">
+      <div className="w-[7cm] bg-slate-900 text-slate-100 p-6 flex flex-col justify-between shrink-0">
         <div className="space-y-6">
-          {/* Header Name */}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">{personal.fullName || "Your Full Name"}</h1>
-            <p className="text-xs font-semibold tracking-wider mt-1.5 uppercase opacity-90" style={{ color: selectedColor }}>
-              {personal.jobTitle || "Title"}
-            </p>
+          {/* Header Name with Avatar */}
+          <div className="space-y-4">
+            {renderAvatar()}
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">{personal.fullName || "Your Full Name"}</h1>
+              <p className="text-xs font-semibold tracking-wider mt-1.5 uppercase opacity-90" style={{ color: selectedColor }}>
+                {personal.jobTitle || "Title"}
+              </p>
+            </div>
           </div>
 
           {/* Contact details */}
@@ -404,20 +477,21 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
 
   // Creative (Stylish & modern block elements)
   const renderCreative = () => (
-    <div className="p-8 bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs relative" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+    <div className={`${getPaddingClass()} bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs relative`} style={{ fontFamily: selectedFont || "Space Grotesk, sans-serif" }}>
       {/* Creative Background Accents */}
       <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10 pointer-events-none" style={{ backgroundColor: selectedColor }} />
       <div className="absolute bottom-0 left-0 w-24 h-24 rounded-tr-full opacity-5 pointer-events-none" style={{ backgroundColor: selectedColor }} />
 
       {/* Creative Header */}
       <div className="flex flex-col md:flex-row items-start justify-between gap-4 border-b border-slate-200 pb-6">
-        <div>
+        <div className="flex-1">
           <span className="text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full text-white font-bold mb-3 inline-block" style={{ backgroundColor: selectedColor }}>
             {personal.jobTitle || "Innovator & Builder"}
           </span>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight mt-1">{personal.fullName || "Your Full Name"}</h1>
           <p className="text-xs text-slate-500 mt-2 max-w-sm">{personal.summary}</p>
         </div>
+        {renderAvatar()}
 
         {/* Dynamic contacts block */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-2 w-full md:w-auto text-[11px] text-slate-600 font-medium">
@@ -555,11 +629,14 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
 
   // Student (Fresher design optimized focusing on Education/Projects first)
   const renderStudent = () => (
-    <div className="p-8 bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className={`${getPaddingClass()} bg-white max-w-[21cm] min-h-[29.7cm] shadow-xs relative`} style={{ fontFamily: selectedFont || "Inter, sans-serif" }}>
       {/* Modern Centered Header */}
-      <div className="text-center pb-6 border-b border-slate-100">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{personal.fullName || "Your Full Name"}</h1>
-        <p className="text-sm font-semibold tracking-wider text-slate-400 uppercase mt-1">{personal.jobTitle || "Fresh Graduate"}</p>
+      <div className="flex flex-col items-center text-center pb-6 border-b border-slate-100 gap-3">
+        {renderAvatar()}
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{personal.fullName || "Your Full Name"}</h1>
+          <p className="text-sm font-semibold tracking-wider text-slate-400 uppercase mt-1">{personal.jobTitle || "Fresh Graduate"}</p>
+        </div>
         
         {/* Rounded Pill links */}
         <div className="flex flex-wrap justify-center gap-1.5 mt-3 text-[10px] text-slate-500">
@@ -700,8 +777,12 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
     <div 
       ref={printRef}
       id="printable-cv"
-      className="w-full bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden printable-shadow"
+      className="w-full bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden printable-shadow relative"
+      style={getBorderStyles()}
     >
+      {selectedBorderAccent === "top-bar" && (
+        <div className="w-full h-3 shrink-0" style={{ backgroundColor: selectedColor }} />
+      )}
       {selectedTemplate === "modern" && renderModern()}
       {selectedTemplate === "professional" && renderProfessional()}
       {selectedTemplate === "creative" && renderCreative()}
