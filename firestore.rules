@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Hardened Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validation Blueprints ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'fullName', 'email'])
+        && data.keys().size() <= 6
+        && data.uid is string && data.uid.size() <= 128
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 1000))
+        && (!('createdAt' in data) || data.createdAt is timestamp)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidResume(data) {
+      return data.keys().hasAll(['userId', 'personal', 'selectedTemplate', 'selectedColor'])
+        && data.keys().size() <= 18
+        && data.userId is string && data.userId.size() <= 128
+        && data.userId == request.auth.uid
+        && data.selectedTemplate is string && data.selectedTemplate.size() <= 50
+        && data.selectedColor is string && data.selectedColor.size() <= 50
+        && (!('selectedFont' in data) || (data.selectedFont is string && data.selectedFont.size() <= 100))
+        && (!('selectedDensity' in data) || (data.selectedDensity is string && data.selectedDensity.size() <= 50))
+        && (!('selectedLayoutVariation' in data) || (data.selectedLayoutVariation is string && data.selectedLayoutVariation.size() <= 50))
+        && (!('selectedBulletStyle' in data) || (data.selectedBulletStyle is string && data.selectedBulletStyle.size() <= 50))
+        && (!('selectedBorderAccent' in data) || (data.selectedBorderAccent is string && data.selectedBorderAccent.size() <= 50))
+        && (!('showAvatar' in data) || (data.showAvatar is bool))
+        && (!('selectedAvatarShape' in data) || (data.selectedAvatarShape is string && data.selectedAvatarShape.size() <= 50))
+        && (!('createdAt' in data) || data.createdAt is timestamp)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp)
+        && data.personal is map
+        && data.personal.keys().hasAll(['fullName'])
+        && data.personal.fullName is string && data.personal.fullName.size() <= 200
+        && (!('jobTitle' in data.personal) || (data.personal.jobTitle is string && data.personal.jobTitle.size() <= 200))
+        && (!('email' in data.personal) || (data.personal.email is string && data.personal.email.size() <= 200))
+        && (!('phone' in data.personal) || (data.personal.phone is string && data.personal.phone.size() <= 100))
+        && (!('address' in data.personal) || (data.personal.address is string && data.personal.address.size() <= 500))
+        && (!('linkedin' in data.personal) || (data.personal.linkedin is string && data.personal.linkedin.size() <= 500))
+        && (!('website' in data.personal) || (data.personal.website is string && data.personal.website.size() <= 500))
+        && (!('summary' in data.personal) || (data.personal.summary is string && data.personal.summary.size() <= 2000))
+        && (!('photoUrl' in data.personal) || (data.personal.photoUrl is string && data.personal.photoUrl.size() <= 1000))
+        && data.education is list
+        && data.experience is list
+        && data.skills is list
+        && data.projects is list
+        && data.certifications is list
+        && data.languages is list;
+    }
+
+    // --- Match Rules ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && isValidUser(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == request.time;
+      allow update: if isOwner(userId)
+        && isValidUser(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'photoUrl', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    match /resumes/{resumeId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid);
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidId(resumeId)
+        && isValidResume(incoming())
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isSignedIn()
+        && isValidId(resumeId)
+        && isValidResume(incoming())
+        && existing().userId == request.auth.uid
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isSignedIn()
+        && existing().userId == request.auth.uid;
+    }
+  }
+}

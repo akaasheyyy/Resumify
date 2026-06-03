@@ -6,12 +6,44 @@
 import React, { useState } from "react";
 import { X, LogIn, Mail, Lock, User, Chrome, CheckCircle } from "lucide-react";
 import { UserSession } from "../types";
+import { auth, db } from "../lib/firebase";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  updateProfile 
+} from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (session: UserSession) => void;
   userEmail?: string;
+}
+
+
+function formatAuthError(err: any): string {
+  if (!err) return "Authentication error occurred.";
+  const code = err.code || "";
+  const msg = err.message || "";
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+    return "Invalid email address or password combination.";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "This email address is already registered.";
+  }
+  if (code === "auth/weak-password") {
+    return "Password is too weak. Must be at least 6 characters.";
+  }
+  if (code === "auth/invalid-email") {
+    return "Please structure a valid email address representation.";
+  }
+  if (code === "auth/popup-closed-by-user") {
+    return "Google login popup was closed before completion.";
+  }
+  return msg.replace("Firebase: ", "") || "An unexpected error occurred.";
 }
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail = "meakashsunilkk@gmail.com" }: AuthModalProps) {
@@ -25,7 +57,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -36,59 +68,105 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
       return;
     }
 
-    // Heuristically construct a clean name if they register or login
-    let resolvedName = fullName.trim() || "Guest User";
-    if (isLoginTab) {
-      if (email.toLowerCase().trim() === userEmail.toLowerCase().trim()) {
-        resolvedName = "Akash Sunil";
-      } else {
-        const emailPrefix = email.split("@")[0] || "";
-        if (emailPrefix) {
-          resolvedName = emailPrefix
-            .split(/[._-]/)
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" ");
-        }
-      }
-    }
+    try {
+      let user;
+      let resolvedName = fullName.trim() || "Guest User";
 
-    // Simulate database lookup/creation
-    setTimeout(() => {
+      if (isLoginTab) {
+        // Real Sign In
+        const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+        user = credential.user;
+        resolvedName = user.displayName || resolvedName;
+      } else {
+        // Real Sign Up
+        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        user = credential.user;
+        await updateProfile(user, { displayName: resolvedName });
+      }
+
+      // Sync User Profile Record to Firestore
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists() || !isLoginTab) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          fullName: resolvedName,
+          email: user.email || email.toLowerCase().trim(),
+          photoUrl: user.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(user.uid)}`,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
       setLoading(false);
       setSuccess(true);
+
       setTimeout(() => {
         onLoginSuccess({
-          email: email.toLowerCase().trim(),
+          email: user.email || email.toLowerCase().trim(),
           isLoggedIn: true,
           fullName: resolvedName,
-          avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(email)}`,
+          avatarUrl: user.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(user.uid)}`,
         });
         setSuccess(false);
         onClose();
       }, 1000);
-    }, 1200);
+
+    } catch (err: any) {
+      console.error("Auth error: ", err);
+      setError(formatAuthError(err));
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setError("");
     setLoading(true);
 
-    // Simulate Google OAuth popup and callback
-    setTimeout(() => {
+    try {
+      const provider = new GoogleAuthProvider();
+      // Configure popup
+      const credential = await signInWithPopup(auth, provider);
+      const user = credential.user;
+      const resolvedName = user.displayName || "Google User";
+
+      // Sync User Profile to Firestore to satisfy foreign relationship constraints
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          fullName: resolvedName,
+          email: user.email || "",
+          photoUrl: user.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(user.uid)}`,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
       setLoading(false);
       setSuccess(true);
+
       setTimeout(() => {
         onLoginSuccess({
-          email: userEmail,
-          fullName: "Akash Sunil",
+          email: user.email || "",
           isLoggedIn: true,
-          avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=AkashSunil",
+          fullName: resolvedName,
+          avatarUrl: user.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(user.uid)}`,
         });
         setSuccess(false);
         onClose();
       }, 1000);
-    }, 1000);
+
+    } catch (err: any) {
+      console.error("Google Auth error: ", err);
+      setError(formatAuthError(err));
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">

@@ -16,6 +16,9 @@ import {
   Sparkles, FileText, Download, RotateCcw, AlertCircle, CheckCircle, 
   ArrowRight, Shield, Layers, HelpCircle, User, Mail, Send, Check 
 } from "lucide-react";
+import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("home");
@@ -27,6 +30,13 @@ export default function App() {
     isLoggedIn: false,
   });
 
+  // Cloud Synchronisation States
+  const [syncStatus, setSyncStatus] = useState<"disabled" | "idle" | "saving" | "saved" | "error">("disabled");
+  const [syncError, setSyncError] = useState("");
+  const [resumeCreatedAt, setResumeCreatedAt] = useState<any>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+
   // AI Connection checks
   const [aiStatus, setAiStatus] = useState({ status: "checking", message: "Contacting AI models..." });
 
@@ -37,7 +47,7 @@ export default function App() {
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Fetch status on startup
+  // Fetch status on startup and register authentication listeners
   useEffect(() => {
     fetch("/api/ai/status")
       .then(res => res.json())
@@ -49,27 +59,170 @@ export default function App() {
         setAiStatus({ status: "missing_key", message: "AI engines are offline. Configure process.env.GEMINI_API_KEY in secrets." });
       });
 
-    // Check pre-saved session helper
-    const storedSessionHelper = localStorage.getItem("resumify_session");
-    if (storedSessionHelper) {
-      try {
-        setSession(JSON.parse(storedSessionHelper));
-      } catch (err) {
-        console.error(err);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const resolvedName = firebaseUser.displayName || "Authenticated User";
+        const freshSession = {
+          email: firebaseUser.email || "",
+          fullName: resolvedName,
+          isLoggedIn: true,
+          avatarUrl: firebaseUser.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(firebaseUser.uid)}`,
+        };
+        setSession(freshSession);
+        localStorage.setItem("resumify_session", JSON.stringify(freshSession));
+      } else {
+        const resetSession = {
+          email: "",
+          fullName: "",
+          isLoggedIn: false,
+        };
+        setSession(resetSession);
+        localStorage.removeItem("resumify_session");
       }
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  // Fetch Cloud resume data once upon login
+  useEffect(() => {
+    if (!session.isLoggedIn) {
+      setSyncStatus("disabled");
+      setResumeCreatedAt(null);
+      return;
+    }
+
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const loadCloudResume = async () => {
+      setSyncStatus("saving");
+      const path = `resumes/${uid}`;
+      try {
+        const docRef = doc(db, "resumes", uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data() as any;
+          setResumeCreatedAt(cloudData.createdAt || null);
+          setResumeData({
+            personal: cloudData.personal || { fullName: "" },
+            education: cloudData.education || [],
+            experience: cloudData.experience || [],
+            skills: cloudData.skills || [],
+            projects: cloudData.projects || [],
+            certifications: cloudData.certifications || [],
+            languages: cloudData.languages || [],
+            selectedTemplate: cloudData.selectedTemplate || "modern",
+            selectedColor: cloudData.selectedColor || "#1e3a8a",
+            selectedFont: cloudData.selectedFont,
+            selectedDensity: cloudData.selectedDensity,
+            selectedLayoutVariation: cloudData.selectedLayoutVariation,
+            selectedBulletStyle: cloudData.selectedBulletStyle,
+            selectedBorderAccent: cloudData.selectedBorderAccent,
+            showAvatar: cloudData.showAvatar,
+            selectedAvatarShape: cloudData.selectedAvatarShape,
+          });
+          setSyncStatus("saved");
+        } else {
+          // Document does not exist yet; prime it with current data state
+          await setDoc(docRef, {
+            userId: uid,
+            personal: resumeData.personal || { fullName: "" },
+            education: resumeData.education || [],
+            experience: resumeData.experience || [],
+            skills: resumeData.skills || [],
+            projects: resumeData.projects || [],
+            certifications: resumeData.certifications || [],
+            languages: resumeData.languages || [],
+            selectedTemplate: resumeData.selectedTemplate || "modern",
+            selectedColor: resumeData.selectedColor || "#1e3a8a",
+            selectedFont: resumeData.selectedFont || "",
+            selectedDensity: resumeData.selectedDensity || "comfortable",
+            selectedLayoutVariation: resumeData.selectedLayoutVariation || "classic",
+            selectedBulletStyle: resumeData.selectedBulletStyle || "disc",
+            selectedBorderAccent: resumeData.selectedBorderAccent || "none",
+            showAvatar: resumeData.showAvatar !== undefined ? resumeData.showAvatar : false,
+            selectedAvatarShape: resumeData.selectedAvatarShape || "circle",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          setSyncStatus("saved");
+        }
+      } catch (err: any) {
+        console.error("Cloud Resume Loading failed:", err);
+        setSyncStatus("error");
+        setSyncError(err.message || String(err));
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+
+    loadCloudResume();
+  }, [session.isLoggedIn]);
+
+  // Debounced Autosave block to Firestore
+  useEffect(() => {
+    if (!session.isLoggedIn || isInitialLoad) return;
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    setSyncStatus("saving");
+    const delayDebounceTimeout = setTimeout(async () => {
+      const path = `resumes/${uid}`;
+      try {
+        const docRef = doc(db, "resumes", uid);
+        await setDoc(docRef, {
+          userId: uid,
+          personal: resumeData.personal || { fullName: "" },
+          education: resumeData.education || [],
+          experience: resumeData.experience || [],
+          skills: resumeData.skills || [],
+          projects: resumeData.projects || [],
+          certifications: resumeData.certifications || [],
+          languages: resumeData.languages || [],
+          selectedTemplate: resumeData.selectedTemplate || "modern",
+          selectedColor: resumeData.selectedColor || "#1e3a8a",
+          selectedFont: resumeData.selectedFont || "",
+          selectedDensity: resumeData.selectedDensity || "comfortable",
+          selectedLayoutVariation: resumeData.selectedLayoutVariation || "classic",
+          selectedBulletStyle: resumeData.selectedBulletStyle || "disc",
+          selectedBorderAccent: resumeData.selectedBorderAccent || "none",
+          showAvatar: resumeData.showAvatar !== undefined ? resumeData.showAvatar : false,
+          selectedAvatarShape: resumeData.selectedAvatarShape || "circle",
+          createdAt: resumeCreatedAt || serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        setSyncStatus("saved");
+      } catch (err: any) {
+        console.error("Cloud Resume Autosave failed:", err);
+        setSyncStatus("error");
+        setSyncError(err.message || String(err));
+      }
+    }, 1500);
+
+    return () => clearTimeout(delayDebounceTimeout);
+  }, [resumeData, session.isLoggedIn, isInitialLoad]);
 
   // Login handler
   const handleLoginSuccess = (user: UserSession) => {
     setSession(user);
     localStorage.setItem("resumify_session", JSON.stringify(user));
+    setIsInitialLoad(true);
   };
 
-  const handleLogout = () => {
-    const freshSession = { email: "", fullName: "", isLoggedIn: false };
-    setSession(freshSession);
-    localStorage.removeItem("resumify_session");
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setSession({ email: "", fullName: "", isLoggedIn: false });
+      localStorage.removeItem("resumify_session");
+      setResumeData(DEFAULT_RESUME_DATA);
+      setResumeCreatedAt(null);
+      setIsInitialLoad(true);
+      setSyncStatus("disabled");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Parser Integration
@@ -288,6 +441,67 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Cloud Sync Status Indicator block */}
+              {session.isLoggedIn ? (
+                <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-3xs">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Secure Backup Enabled</p>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase font-mono tracking-wider">Cloud Space: {session.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold bg-slate-50/50">
+                    {syncStatus === "saving" && (
+                      <>
+                        <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin shrink-0" />
+                        <span className="text-blue-600 animate-pulse">Syncing...</span>
+                      </>
+                    )}
+                    {syncStatus === "saved" && (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-emerald-600">Saved to Cloud</span>
+                      </>
+                    )}
+                    {syncStatus === "idle" && (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-slate-500">Sync is idle</span>
+                      </>
+                    )}
+                    {syncStatus === "error" && (
+                      <>
+                        <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                        <span className="text-red-500 truncate" title={syncError}>Error syncing</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/40 border border-blue-100 rounded-xl flex items-center justify-between shadow-3xs gap-3">
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Enable Cloud Storage & Resume Sync</p>
+                      <p className="text-[10px] text-slate-500 font-semibold leading-normal">
+                        Connect with Firebase to securely back up your progress, sync across screens, and access AI templates securely!
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAuthIsOpen(true)}
+                    className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg text-[10px] transition shrink-0 active:scale-95 shadow-sm cursor-pointer"
+                  >
+                    Connect
+                  </button>
+                </div>
+              )}
 
               <ResumeForm 
                 data={resumeData} 

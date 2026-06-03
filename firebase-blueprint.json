@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile with personal and security details",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier of the user" },
+        "fullName": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "photoUrl": { "type": "string", "description": "Avatar URL of the user" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "email"]
+    },
+    "resume": {
+      "title": "Resume",
+      "description": "Premium CV documents with customization parameters",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document unique ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "personal": {
+          "type": "object",
+          "properties": {
+            "fullName": { "type": "string" },
+            "jobTitle": { "type": "string" },
+            "email": { "type": "string" },
+            "phone": { "type": "string" },
+            "address": { "type": "string" },
+            "linkedin": { "type": "string" },
+            "website": { "type": "string" },
+            "summary": { "type": "string" },
+            "photoUrl": { "type": "string" }
+          },
+          "required": ["fullName"]
+        },
+        "education": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "experience": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "skills": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "projects": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "certifications": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "languages": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "selectedTemplate": { "type": "string" },
+        "selectedColor": { "type": "string" },
+        "selectedFont": { "type": "string" },
+        "selectedDensity": { "type": "string", "enum": ["compact", "comfortable", "spacious", "atmospheric"] },
+        "selectedLayoutVariation": { "type": "string" },
+        "selectedBulletStyle": { "type": "string", "enum": ["disc", "square", "dash", "accent-dot"] },
+        "selectedBorderAccent": { "type": "string", "enum": ["none", "top-bar", "left-bar", "frame", "accent-bottom"] },
+        "showAvatar": { "type": "boolean" },
+        "selectedAvatarShape": { "type": "string", "enum": ["circle", "rounded", "sharp"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "personal", "selectedTemplate", "selectedColor"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Stores user profiles"
+    },
+    "/resumes/{resumeId}": {
+      "schema": "resume",
+      "description": "Stores premium user CV models"
+    }
+  }
+}
