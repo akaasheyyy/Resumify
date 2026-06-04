@@ -16,7 +16,7 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
   const { 
     personal, education, experience, skills, projects, certifications, languages, 
     selectedTemplate, selectedColor, selectedFont, selectedDensity, selectedBulletStyle, 
-    selectedBorderAccent, showAvatar, selectedAvatarShape 
+    selectedBorderAccent, showAvatar, selectedAvatarShape, selectedAvatarSize
   } = data;
 
   // Spacing and Density wrapper padding solver
@@ -87,12 +87,23 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
       selectedAvatarShape === "rounded" ? "rounded-xl" :
       selectedAvatarShape === "sharp" ? "rounded-none border-2" : "rounded-full";
     const avatarUrl = personal.photoUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(personal.email || personal.fullName || "Akash")}`;
+    
+    // Choose photo/avatar render dimensions: default to lg (w-24 h-24 / 96px) for an outstanding presentation!
+    const sizeMap = {
+      sm: "w-14 h-14",
+      md: "w-20 h-20",
+      lg: "w-24 h-24",
+      xl: "w-28 h-28",
+      xxl: "w-32 h-32"
+    };
+    const sizeClass = sizeMap[selectedAvatarSize || "lg"] || "w-24 h-24";
+
     return (
       <img
         src={avatarUrl}
         alt={personal.fullName || "Portrait"}
         referrerPolicy="no-referrer"
-        className={`w-16 h-16 object-cover bg-slate-50 border border-slate-200 shadow-3xs shrink-0 ${shapeClass}`}
+        className={`${sizeClass} object-cover bg-slate-50 border border-slate-200 shadow-3xs shrink-0 ${shapeClass}`}
         style={{ borderColor: selectedColor }}
       />
     );

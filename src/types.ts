@@ -74,6 +74,7 @@ export interface ResumeData {
   selectedBorderAccent?: "none" | "top-bar" | "left-bar" | "frame" | "accent-bottom"; // Shell aesthetics
   showAvatar?: boolean; // Avatar Toggle
   selectedAvatarShape?: "circle" | "rounded" | "sharp"; // Avatar Frame
+  selectedAvatarSize?: "sm" | "md" | "lg" | "xl" | "xxl"; // Avatar Sizing
 }
 
 export interface UserSession {

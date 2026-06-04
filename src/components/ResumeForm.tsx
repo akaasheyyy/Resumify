@@ -161,8 +161,8 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
       
       const img = new Image();
       img.onload = () => {
-        // Enforce maximum width/height of 250px to keep firestore payloads incredibly safe and lightweight
-        const maxDim = 250;
+        // Enforce maximum width/height of 600px to keep firestore payloads incredibly high quality yet lightweight
+        const maxDim = 600;
         let width = img.width;
         let height = img.height;
 
@@ -626,15 +626,20 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
               {data.showAvatar && (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                   {/* LEFT: Live Preview Frame */}
-                  <div className="md:col-span-3 flex flex-col items-center justify-center space-y-2 bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                  <div className="md:col-span-3 flex flex-col items-center justify-center space-y-3 bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Live Frame Preview</span>
                     
-                    <div className="relative group shrink-0">
+                    <div className="relative group shrink-0 flex items-center justify-center min-h-[140px] w-full">
                       <img
                         src={data.personal.photoUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(data.personal.email || data.personal.fullName || "Akash")}`}
                         alt={data.personal.fullName || "Portrait Preview"}
                         referrerPolicy="no-referrer"
-                        className={`w-20 h-20 object-cover bg-slate-100 border border-slate-300 shadow-2xs ${
+                        className={`object-cover bg-slate-100 border border-slate-300 shadow-2xs ${
+                          (data.selectedAvatarSize === "sm") ? "w-14 h-14" :
+                          (data.selectedAvatarSize === "md") ? "w-20 h-20" :
+                          (data.selectedAvatarSize === "xl") ? "w-28 h-28" :
+                          (data.selectedAvatarSize === "xxl") ? "w-32 h-32" : "w-24 h-24" // default to "lg" (w-24 h-24)
+                        } ${
                           data.selectedAvatarShape === "rounded" ? "rounded-xl" :
                           data.selectedAvatarShape === "sharp" ? "rounded-none" : "rounded-full"
                         }`}
@@ -644,7 +649,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                         <button
                           type="button"
                           onClick={() => updatePersonal("photoUrl", "")}
-                          className="absolute -top-1.5 -right-1.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 rounded-full p-1 shadow-3xs transition active:scale-95"
+                          className="absolute top-1 right-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 rounded-full p-1 shadow-3xs transition active:scale-95 animate-fadeIn"
                           title="Remove custom photo and fallback to avatar"
                         >
                           <X className="w-3 h-3" />
@@ -653,25 +658,56 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                     </div>
 
                     {/* Frame shapes selector */}
-                    <div className="flex gap-1 justify-center pt-2">
-                      {[
-                        { label: "Circle", val: "circle" },
-                        { label: "Rounded", val: "rounded" },
-                        { label: "Sharp", val: "sharp" }
-                      ].map((item) => (
-                        <button
-                          key={item.val}
-                          type="button"
-                          onClick={() => onChange({ ...data, selectedAvatarShape: item.val as any })}
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all ${
-                            (data.selectedAvatarShape || "circle") === item.val
-                              ? "bg-slate-900 border-slate-900 text-white shadow-3xs"
-                              : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
+                    <div className="w-full space-y-1.5 border-t border-slate-100 pt-2.5">
+                      <span className="text-[8px] text-slate-400 uppercase font-mono font-extrabold block text-center">Shape Format</span>
+                      <div className="flex gap-1 justify-center">
+                        {[
+                          { label: "Circle", val: "circle" },
+                          { label: "Rounded", val: "rounded" },
+                          { label: "Sharp", val: "sharp" }
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => onChange({ ...data, selectedAvatarShape: item.val as any })}
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all ${
+                              (data.selectedAvatarShape || "circle") === item.val
+                                ? "bg-slate-900 border-slate-900 text-white shadow-3xs"
+                                : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Frame Sizing selector */}
+                    <div className="w-full space-y-1.5 border-t border-slate-100 pt-2.5">
+                      <span className="text-[8px] text-slate-400 uppercase font-mono font-extrabold block text-center">Display Sizing</span>
+                      <div className="flex gap-1 justify-center">
+                        {[
+                          { label: "SM", val: "sm", title: "Compact (56px)" },
+                          { label: "MD", val: "md", title: "Standard (80px)" },
+                          { label: "LG", val: "lg", title: "Large (96px)" },
+                          { label: "XL", val: "xl", title: "Bio Focus (112px)" },
+                          { label: "XXL", val: "xxl", title: "Executive Accent (128px)" }
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            title={item.title}
+                            onClick={() => onChange({ ...data, selectedAvatarSize: item.val as any })}
+                            className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border transition-all ${
+                              (data.selectedAvatarSize || "lg") === item.val
+                                ? "bg-blue-600 border-blue-600 text-white shadow-3xs"
+                                : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
