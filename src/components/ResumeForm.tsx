@@ -149,56 +149,30 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
 
   const handlePhotoFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      setErrorToast("Please upload an image file (PNG, JPG, WebP, SVG, SEC, etc.)");
+      setErrorToast("Please upload an image file (PNG, JPG, WebP, SVG, etc.)");
       setTimeout(() => setErrorToast(null), 5000);
+      return;
+    }
+
+    // Direct check for size to prevent Firestore payload sync failures (> 900KB)
+    if (file.size > 921600) {
+      setErrorToast(`File is too large (${Math.round(file.size / 1024)}KB). To guarantee flawless database sync, please import a photo under 900KB or reference a web link.`);
+      setTimeout(() => setErrorToast(null), 6000);
       return;
     }
 
     setCompressingPhoto(true);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const imgUrl = event.target?.result as string;
+      const originalDataUrl = event.target?.result as string;
       
-      const img = new Image();
-      img.onload = () => {
-        // Enforce maximum width/height of 600px to keep firestore payloads incredibly high quality yet lightweight
-        const maxDim = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-          updatePersonal("photoUrl", compressedDataUrl);
-          setSuccessToast("Photo processed & optimized successfully!");
-          setTimeout(() => setSuccessToast(null), 5000);
-        } else {
-          updatePersonal("photoUrl", imgUrl);
-        }
-        setCompressingPhoto(false);
-      };
-      img.onerror = () => {
-        setErrorToast("Failed to load image. Try another photo format.");
-        setTimeout(() => setErrorToast(null), 5000);
-        setCompressingPhoto(false);
-      };
-      img.src = imgUrl;
+      // Store the literal, raw base64 data URL exactly as it is, fully preserving original format, transparency, resolution, and quality.
+      updatePersonal("photoUrl", originalDataUrl);
+      setSuccessToast("Photo processed and preserved at 100% original quality!");
+      setTimeout(() => setSuccessToast(null), 4000);
+      setCompressingPhoto(false);
     };
+
     reader.onerror = () => {
       setErrorToast("Failed to read image file.");
       setTimeout(() => setErrorToast(null), 5000);
@@ -752,7 +726,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       {compressingPhoto ? (
                         <>
                           <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                          <p className="text-[11px] font-extrabold text-blue-600 animate-pulse">Resizing & Compressing Photo...</p>
+                          <p className="text-[11px] font-extrabold text-blue-600 animate-pulse">Reading Raw Ultra-HD Photo...</p>
                         </>
                       ) : (
                         <>
