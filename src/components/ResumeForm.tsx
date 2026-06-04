@@ -1208,7 +1208,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 lg:max-h-[460px] lg:overflow-y-auto max-h-none overflow-visible pr-1 sm:pr-1.5 scrollbar-thin scroll-smooth" id="skills-list-scroll-wrapper">
+                    <div className="space-y-2.5" id="skills-list-scroll-wrapper">
                       {data.skills.map(s => {
                         return (
                           <div key={s.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 select-container">
@@ -1332,7 +1332,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 lg:max-h-[460px] lg:overflow-y-auto max-h-none overflow-visible pr-1 sm:pr-1.5 scrollbar-thin scroll-smooth" id="certs-list-scroll-wrapper">
+                    <div className="space-y-2.5" id="certs-list-scroll-wrapper">
                       {data.certifications.map(c => (
                         <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs space-y-2 relative group animate-slideIn">
                           <button
@@ -1406,7 +1406,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 lg:max-h-[460px] lg:overflow-y-auto max-h-none overflow-visible pr-1 sm:pr-1.5 scrollbar-thin scroll-smooth" id="langs-list-scroll-wrapper">
+                    <div className="space-y-2.5" id="langs-list-scroll-wrapper">
                       {data.languages.map(l => (
                         <div key={l.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 flex flex-col animate-slideIn">
                           <div className="flex gap-2 items-center justify-between">
