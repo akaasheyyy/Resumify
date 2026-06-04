@@ -224,13 +224,31 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
               <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b pb-1 flex items-center gap-1.5" style={{ color: selectedColor, borderColor: `${selectedColor}30` }}>
                 <Layers className="w-4 h-4" /> Skills
               </h2>
-              <div className="flex flex-wrap gap-1.5">
-                {skills.map((skill) => (
-                  <div key={skill.id} className="text-[10px] px-2 py-1 bg-slate-50 rounded border border-slate-100 flex flex-col">
-                    <span className="font-semibold text-slate-800">{skill.name}</span>
-                    {skill.level && <span className="text-[8px] text-slate-400 font-medium">{skill.level}</span>}
-                  </div>
-                ))}
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => {
+                  let levelBadgeColor = "bg-slate-100 text-slate-600";
+                  if (skill.level === "Expert") {
+                    levelBadgeColor = "bg-emerald-50 text-emerald-800 border-emerald-100/60";
+                  } else if (skill.level === "Intermediate") {
+                    levelBadgeColor = "bg-indigo-50 text-indigo-850 border-indigo-100/60";
+                  } else if (skill.level === "Beginner") {
+                    levelBadgeColor = "bg-sky-50 text-sky-850 border-sky-100/60";
+                  }
+                  return (
+                    <div 
+                      key={skill.id} 
+                      className="text-[10px] px-2.5 py-1.5 bg-white rounded-lg border border-slate-150 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex flex-col gap-0.5 hover:shadow-xs transition-all border-l-2"
+                      style={{ borderLeftColor: selectedColor }}
+                    >
+                      <span className="font-bold text-slate-800 tracking-tight">{skill.name}</span>
+                      {skill.level && (
+                        <span className={`text-[7px] px-1 py-0.2 rounded font-black uppercase tracking-wider self-start border ${levelBadgeColor}`}>
+                          {skill.level}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -348,26 +366,35 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
           {/* Skills */}
           {skills.length > 0 && (
             <div className="space-y-2 pt-4 border-t border-slate-700">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-300">Core Skills</h2>
-              <div className="space-y-2">
-                {skills.map(s => (
-                  <div key={s.id} className="text-xs">
-                    <div className="flex justify-between font-semibold text-slate-100">
-                      <span>{s.name}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">{s.level}</span>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center justify-between">
+                <span>Core Skills</span>
+                <span className="text-[10px] text-slate-400 normal-case font-mono">{skills.length} skills</span>
+              </h2>
+              <div className="space-y-2.5">
+                {skills.map(s => {
+                  const width = s.level === "Expert" ? "100%" : s.level === "Intermediate" ? "70%" : "40%";
+                  const dotColor = s.level === "Expert" ? "text-emerald-400" : s.level === "Intermediate" ? "text-indigo-400" : "text-sky-450";
+                  return (
+                    <div key={s.id} className="text-xs">
+                      <div className="flex justify-between font-bold text-slate-100 items-baseline">
+                        <span className="tracking-tight">{s.name}</span>
+                        <span className="text-[9px] text-slate-450 font-semibold font-mono flex items-center gap-1">
+                          <span className={dotColor}>●</span> {s.level || "Expert"}
+                        </span>
+                      </div>
+                      {/* Visual skill bars */}
+                      <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div 
+                          className="h-full rounded-full" 
+                          style={{ 
+                            backgroundColor: selectedColor, 
+                            width: width 
+                          }} 
+                        />
+                      </div>
                     </div>
-                    {/* Visual skill bars */}
-                    <div className="w-full bg-slate-800 h-1 rounded overflow-hidden mt-1">
-                      <div 
-                        className="h-full" 
-                        style={{ 
-                          backgroundColor: selectedColor, 
-                          width: s.level === "Expert" ? "100%" : s.level === "Intermediate" ? "70%" : "40%" 
-                        }} 
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -586,17 +613,35 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
         <div className="space-y-6">
           {/* Skills Grid */}
           {skills.length > 0 && (
-            <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-3">Superpowers</h3>
+            <div className="p-4 bg-slate-50/40 rounded-xl border border-slate-100 shadow-3xs">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedColor }} />
+                <span>Superpowers & Skills</span>
+              </h3>
               <div className="flex flex-wrap gap-1.5">
-                {skills.map(s => (
-                  <span 
-                    key={s.id} 
-                    className="text-[10px] px-2 py-1 bg-white rounded-lg border border-slate-100 shadow-3xs font-semibold text-slate-700"
-                  >
-                    {s.name}
-                  </span>
-                ))}
+                {skills.map(s => {
+                  let badgeText = "text-slate-705 border-slate-200 bg-white";
+                  let levelTag = "";
+                  if (s.level === "Expert") {
+                    badgeText = "text-emerald-800 border-emerald-100 bg-emerald-50/40";
+                    levelTag = "💪";
+                  } else if (s.level === "Intermediate") {
+                    badgeText = "text-indigo-800 border-indigo-100 bg-indigo-50/40";
+                    levelTag = "⭐";
+                  } else if (s.level === "Beginner") {
+                    badgeText = "text-sky-800 border-sky-100 bg-sky-50/40";
+                    levelTag = "🌱";
+                  }
+                  return (
+                    <span 
+                      key={s.id} 
+                      className={`text-[10px] px-2.5 py-1 rounded-lg border font-bold flex items-center gap-1 shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${badgeText}`}
+                    >
+                      <span>{s.name}</span>
+                      {levelTag && <span className="text-[9px] opacity-90">{levelTag}</span>}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -725,13 +770,24 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
         {/* Skills */}
         {skills.length > 0 && (
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Technical & Soft Skills</h2>
-            <div className="flex flex-wrap gap-1">
-              {skills.map(s => (
-                <span key={s.id} className="text-[10px] px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-slate-600">
-                  {s.name}
-                </span>
-              ))}
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2.5 flex items-center justify-between">
+              <span>Technical & Soft Skills</span>
+              <span className="text-[8px] text-slate-405 font-mono normal-case font-normal">{skills.length} skills listed</span>
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.map(s => {
+                let borderStyle = s.level === "Expert" ? `2px solid ${selectedColor}` : '2px solid #cbd5e1';
+                return (
+                  <span 
+                    key={s.id} 
+                    style={{ borderLeft: borderStyle }}
+                    className="text-[10px] px-2 py-0.5 bg-slate-50 border border-slate-150 rounded text-slate-700 font-semibold shadow-3xs flex items-center gap-1"
+                  >
+                    <span>{s.name}</span>
+                    {s.level && <span className="text-[8px] text-slate-400 font-normal">({s.level})</span>}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

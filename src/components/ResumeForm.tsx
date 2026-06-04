@@ -219,6 +219,18 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
     onChange({ ...data, skills: [...data.skills, newSkill] });
   };
 
+  const addPopularSkill = (name: string, level: "Beginner" | "Intermediate" | "Expert" = "Intermediate") => {
+    if (data.skills.some(s => s.name.trim().toLowerCase() === name.trim().toLowerCase())) {
+      setSuccessToast(`"${name}" is already in your skills!`);
+      setTimeout(() => setSuccessToast(null), 3000);
+      return;
+    }
+    const newSkill: Skill = { id: `sk-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`, name, level };
+    onChange({ ...data, skills: [...data.skills, newSkill] });
+    setSuccessToast(`Added skill: ${name}`);
+    setTimeout(() => setSuccessToast(null), 3000);
+  };
+
   const removeSkill = (id: string) => {
     onChange({ ...data, skills: data.skills.filter(s => s.id !== id) });
   };
@@ -1250,6 +1262,51 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       })}
                     </div>
                   )}
+
+                  {/* Quick Preset Tray */}
+                  <div className="border-t border-slate-200/60 pt-3 mt-2 space-y-2">
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider font-mono block">Quick Add Professional Skills</span>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { name: "ReactJS", icon: "⚛️" },
+                        { name: "TypeScript", icon: "📘" },
+                        { name: "Python", icon: "🐍" },
+                        { name: "SQL", icon: "🗄️" },
+                        { name: "AWS Cloud", icon: "☁️" },
+                        { name: "CSS/Tailwind", icon: "🎨" },
+                        { name: "Figma UI", icon: "🎨" },
+                        { name: "AI Systems", icon: "🤖" },
+                        { name: "Project Mgmt", icon: "📅" },
+                        { name: "Agile Scrum", icon: "⚡" },
+                        { name: "Communications", icon: "🎙️" },
+                        { name: "Leadership", icon: "🤝" }
+                      ].map((item) => {
+                        const exists = data.skills.some(s => s.name.trim().toLowerCase() === item.name.toLowerCase());
+                        return (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => {
+                              if (exists) {
+                                const target = data.skills.find(s => s.name.trim().toLowerCase() === item.name.toLowerCase());
+                                if (target) removeSkill(target.id);
+                              } else {
+                                addPopularSkill(item.name);
+                              }
+                            }}
+                            className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md border transition-all flex items-center gap-1 active:scale-95 select-none ${
+                              exists 
+                                ? "bg-indigo-600 border-indigo-700 text-white shadow-3xs"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span>{item.icon}</span>
+                            <span>{item.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
