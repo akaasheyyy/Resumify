@@ -46,7 +46,7 @@ service cloud.firestore {
 
     function isValidResume(data) {
       return data.keys().hasAll(['userId', 'personal', 'selectedTemplate', 'selectedColor'])
-        && data.keys().size() <= 18
+        && data.keys().size() <= 20
         && data.userId is string && data.userId.size() <= 128
         && data.userId == request.auth.uid
         && data.selectedTemplate is string && data.selectedTemplate.size() <= 50

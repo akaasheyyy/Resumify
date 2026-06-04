@@ -41,7 +41,10 @@ function formatAuthError(err: any): string {
     return "Please structure a valid email address representation.";
   }
   if (code === "auth/popup-closed-by-user") {
-    return "Google login popup was closed before completion.";
+    return "Google login popup was closed before completion. If popups are disabled, please allow them in your browser.";
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Email & Password Sign-In is not enabled on your Firebase Console. Please go to your Firebase Console under 'Authentication' > 'Sign-in method' and enable the 'Email/Password' provider.";
   }
   return msg.replace("Firebase: ", "") || "An unexpected error occurred.";
 }

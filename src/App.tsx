@@ -10,6 +10,7 @@ import ResumeForm from "./components/ResumeForm";
 import ResumePreview from "./components/ResumePreview";
 import AiBuilder from "./components/AiBuilder";
 import AuthModal from "./components/AuthModal";
+import LoginPage from "./components/LoginPage";
 import { DEFAULT_RESUME_DATA } from "./data";
 import { ResumeData, UserSession } from "./types";
 import { 
@@ -29,6 +30,7 @@ export default function App() {
     fullName: "",
     isLoggedIn: false,
   });
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Cloud Synchronisation States
   const [syncStatus, setSyncStatus] = useState<"disabled" | "idle" | "saving" | "saved" | "error">("disabled");
@@ -79,6 +81,7 @@ export default function App() {
         setSession(resetSession);
         localStorage.removeItem("resumify_session");
       }
+      setAuthLoading(false);
     });
 
     return () => unsubscribe();
@@ -282,6 +285,19 @@ export default function App() {
       alert("Thank you! Your suggestion has been directed to ANUNAND P.R & AKASH SUNIL.");
     }, 1500);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans space-y-4">
+        <div className="w-8 h-8 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+        <p className="text-[11px] font-bold text-slate-400 font-mono tracking-wider animate-pulse uppercase">Verifying authenticated workspace state...</p>
+      </div>
+    );
+  }
+
+  if (!session.isLoggedIn) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">

@@ -1,10 +1,9 @@
 {
-  "projectId": "tera-matter-35xj8",
-  "appId": "1:864552802372:web:9997e00a5d92ace2f28411",
-  "apiKey": "AIzaSyCC0NCOfwuwPkmkUm6GlZT7p_y1UJQ3F3g",
-  "authDomain": "tera-matter-35xj8.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-897228b9-7993-4da2-ad73-4a0cc4891f5f",
-  "storageBucket": "tera-matter-35xj8.firebasestorage.app",
-  "messagingSenderId": "864552802372",
-  "measurementId": ""
+  "projectId": "resumify-b4675",
+  "appId": "1:667328375045:web:e7a5c1fd83e9f0e2742f6c",
+  "apiKey": "AIzaSyDQxrSb3w-5ZaW0SJCAmp44dTFhfMa4P3U",
+  "authDomain": "resumify-b4675.firebaseapp.com",
+  "storageBucket": "resumify-b4675.firebasestorage.app",
+  "messagingSenderId": "667328375045",
+  "measurementId": "G-0WT2ZDK397"
 }
