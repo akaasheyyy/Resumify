@@ -11,6 +11,7 @@ import ResumePreview from "./components/ResumePreview";
 import AiBuilder from "./components/AiBuilder";
 import AuthModal from "./components/AuthModal";
 import LoginPage from "./components/LoginPage";
+import CustomerReviews from "./components/CustomerReviews";
 import { DEFAULT_RESUME_DATA } from "./data";
 import { ResumeData, UserSession } from "./types";
 import { 
@@ -604,6 +605,11 @@ export default function App() {
               aiStatus={aiStatus}
             />
           </div>
+        )}
+
+        {/* TAB 4: Customer Reviews and Ratings */}
+        {currentTab === "reviews" && (
+          <CustomerReviews session={session} />
         )}
 
         {/* TAB 5: About Core Philosophy & Contact Support */}

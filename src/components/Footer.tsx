@@ -40,6 +40,7 @@ export default function Footer({ onTabChange }: FooterProps) {
               { id: "home", label: "Home Page" },
               { id: "builder", label: "Interactive Resume Builder" },
               { id: "ai-builder", label: "Complete AI CV Generator" },
+              { id: "reviews", label: "Customer Experience & Reviews" },
               { id: "about", label: "Team & Project Philosophy" },
             ].map((link) => (
               <li key={link.id}>

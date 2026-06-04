@@ -73,6 +73,21 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "personal", "selectedTemplate", "selectedColor"]
+    },
+    "review": {
+      "title": "Review",
+      "description": "App reviews with star ratings submitted by users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Review unique ID" },
+        "userId": { "type": "string", "description": "Author user UID" },
+        "fullName": { "type": "string", "description": "Author full name" },
+        "email": { "type": "string", "format": "email", "description": "Author email address" },
+        "rating": { "type": "integer", "description": "Rating score from 1 to 5" },
+        "reviewText": { "type": "string", "description": "Review testimonial content" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fullName", "email", "rating", "reviewText"]
     }
   },
   "firestore": {
@@ -83,6 +98,10 @@
     "/resumes/{resumeId}": {
       "schema": "resume",
       "description": "Stores premium user CV models"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "review",
+      "description": "Stores customer testimonials and ratings"
     }
   }
 }

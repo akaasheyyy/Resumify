@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User } from "lucide-react";
+import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User, Star } from "lucide-react";
 import { UserSession } from "../types";
 
 interface NavbarProps {
@@ -42,6 +42,7 @@ export default function Navbar({ currentTab, onTabChange, session, onOpenAuth, o
             { id: "home", label: "Home", icon: Compass },
             { id: "builder", label: "Resume Builder", icon: FileText },
             { id: "ai-builder", label: "Full AI Architect", icon: Cpu },
+            { id: "reviews", label: "Reviews", icon: Star },
             { id: "about", label: "About", icon: HelpCircle },
           ].map((item) => {
             const IconComponent = item.icon;

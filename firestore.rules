@@ -79,10 +79,39 @@ service cloud.firestore {
         && data.languages is list;
     }
 
+    function isValidReview(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'email', 'rating', 'reviewText'])
+        && data.keys().size() <= 7
+        && data.userId is string && data.userId.size() <= 128
+        && data.userId == request.auth.uid
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && data.email == request.auth.token.email
+        && (data.rating is int || data.rating is float) && data.rating >= 1 && data.rating <= 5
+        && data.reviewText is string && data.reviewText.size() >= 2 && data.reviewText.size() <= 2000
+        && (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
     // --- Match Rules ---
 
     match /test/connection {
       allow read: if true;
+    }
+
+    match /reviews/{reviewId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && isValidId(reviewId)
+        && isValidReview(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(reviewId)
+        && isValidReview(incoming())
+        && existing().userId == request.auth.uid
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn()
+        && existing().userId == request.auth.uid;
     }
 
     match /users/{userId} {

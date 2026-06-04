@@ -83,3 +83,14 @@ export interface UserSession {
   isLoggedIn: boolean;
   avatarUrl?: string;
 }
+
+export interface Review {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  rating: number;
+  reviewText: string;
+  createdAt?: any;
+}
+
