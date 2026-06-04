@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Star, MessageSquare, Trash2, ShieldCheck, AlertCircle, Sparkles, Send, Check } from "lucide-react";
+import { Star, MessageSquare, Trash2, ShieldCheck, AlertCircle, Sparkles, Send, Check, Pencil, X } from "lucide-react";
 import { auth, db, handleFirestoreError, OperationType } from "../lib/firebase";
 import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { UserSession, Review } from "../types";
@@ -24,6 +24,8 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
 
   // Synchronise session attributes on mount/edit
   useEffect(() => {
@@ -67,6 +69,26 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
     return () => unsubscribe();
   }, []);
 
+  const handleStartEdit = (rev: Review) => {
+    setIsEditing(true);
+    setEditingReview(rev);
+    setRating(rev.rating);
+    setReviewText(rev.reviewText);
+    setFullName(rev.fullName);
+    const container = document.getElementById("post-review-form-container");
+    if (container) {
+      container.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingReview(null);
+    setRating(5);
+    setReviewText("");
+    setFullName(session.fullName || "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const uid = auth.currentUser?.uid;
@@ -95,7 +117,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
     }
 
     setSubmitting(true);
-    const reviewId = `rev-${uid}`; // Enforce single active review document per authenticated workspace account
+    const reviewId = isEditing && editingReview ? editingReview.id : `rev-${uid}`;
     const reviewDocRef = doc(db, "reviews", reviewId);
 
     const payload = {
@@ -104,13 +126,17 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
       email: email.trim(), // Rules safely prevent email spoofing targeting external addresses
       rating,
       reviewText: reviewText.trim(),
-      createdAt: serverTimestamp(),
+      createdAt: isEditing && editingReview ? editingReview.createdAt : serverTimestamp(),
     };
 
     try {
       await setDoc(reviewDocRef, payload);
-      setSuccessToast("Success! Your verified customer testimonial is compiled and active!");
+      setSuccessToast(isEditing ? "Success! Your review has been updated!" : "Success! Your verified customer testimonial is compiled and active!");
       setReviewText("");
+      if (isEditing) {
+        setIsEditing(false);
+        setEditingReview(null);
+      }
       setTimeout(() => setSuccessToast(null), 5000);
     } catch (err: any) {
       console.error("Submission failed:", err);
@@ -245,15 +271,32 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT COLUMN: Post Review Form */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-3xs space-y-5" id="post-review-form-container">
+              {/* LEFT COLUMN: Post/Edit Review Form */}
+        <div 
+          className={`lg:col-span-5 bg-white p-6 rounded-2xl border transition-all duration-300 space-y-5 ${
+            isEditing 
+              ? "border-indigo-400 ring-4 ring-indigo-50/70 shadow-md" 
+              : "border-slate-100 shadow-3xs"
+          }`} 
+          id="post-review-form-container"
+        >
           <div className="space-y-1.5">
             <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-indigo-600" /> Write Your Review
+              {isEditing ? (
+                <>
+                  <Pencil className="w-5 h-5 text-indigo-600 animate-pulse" /> Edit Your Review
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-5 h-5 text-indigo-600" /> Write Your Review
+                </>
+              )}
             </h3>
             <p className="text-[11px] text-slate-400 font-medium">
-              Rate your experience building, exporting and parsing. One verified testimonial is allocated per account.
+              {isEditing 
+                ? "Modify your verified testimonial payload. Press cancel to discard changes."
+                : "Rate your experience building, exporting and parsing. One verified testimonial is allocated per account."
+              }
             </p>
           </div>
 
@@ -301,9 +344,9 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
             </div>
 
             {/* Interactive Rating Picker */}
-            <div className="space-y-1.5 p-3.5 bg-slate-55 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
+            <div className="space-y-1.5 p-3.5 bg-slate-55 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none font-sans">
               <div>
-                <span className="text-[10px] text-slate-500 font-black uppercase font-mono tracking-wider block">Your App Rating score</span>
+                <span className="text-[10px] text-slate-400 font-black uppercase font-mono tracking-wider block">Your App Rating score</span>
                 <span className="text-[11px] text-slate-400 font-semibold mt-0.5">Tap a star to adjust scale rank</span>
               </div>
               <div className="flex items-center gap-2">
@@ -331,24 +374,47 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
               />
             </div>
 
-            {/* Submit Testimonial */}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-2.5 bg-slate-900 border border-slate-950 text-white rounded-xl text-xs font-bold hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
-            >
-              {submitting ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Publishing Testimonial...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5 text-indigo-400 scale-90" />
-                  <span>Publish Verified Review</span>
-                </>
+            {/* Submit / Action Testimonial Controls */}
+            <div className="flex gap-3">
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 py-2.5 bg-slate-150 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-3xs"
+                >
+                  <X className="w-3.5 h-3.5 text-slate-650" />
+                  <span>Cancel</span>
+                </button>
               )}
-            </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`py-2.5 bg-slate-900 border border-slate-950 text-white rounded-xl text-xs font-bold hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60 disabled:pointer-events-none ${
+                  isEditing ? "flex-[2]" : "w-full"
+                }`}
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{isEditing ? "Updating changes..." : "Publishing..."}</span>
+                  </>
+                ) : (
+                  <>
+                    {isEditing ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400 scale-105" />
+                        <span>Save Updates</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5 text-indigo-400 scale-90" />
+                        <span>Publish Verified Review</span>
+                      </>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
@@ -439,16 +505,26 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
                       </p>
                     </div>
 
-                    {/* Delete Trigger for review authors */}
+                    {/* Action Triggers for review authors */}
                     {isMyReview && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(rev.id, rev.userId)}
-                        title="Delete your testimonial"
-                        className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto text-slate-400 hover:text-red-500 sm:opacity-0 group-hover:opacity-100 transition p-1.5 hover:bg-red-50 rounded-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto flex gap-1 sm:opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(rev)}
+                          title="Edit your testimonial"
+                          className="text-slate-400 hover:text-indigo-600 transition p-1.5 hover:bg-indigo-50 rounded-lg cursor-pointer"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(rev.id, rev.userId)}
+                          title="Delete your testimonial"
+                          className="text-slate-400 hover:text-red-500 transition p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
