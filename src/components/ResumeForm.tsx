@@ -5,7 +5,121 @@
 
 import React, { useState } from "react";
 import { ResumeData, Education, Experience, Skill, Project, Certification, Language } from "../types";
-import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2, AlertCircle, X } from "lucide-react";
+import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2, AlertCircle, X, Award, BookOpen, Globe, RefreshCw, Cpu, Layers, ShieldCheck } from "lucide-react";
+
+const OUTSHELL_BLUEPRINTS = [
+  {
+    name: "Modern Full-Stack Architect",
+    role: "Full-Stack Developer",
+    iconType: "developer",
+    description: "Ideal for modern web/mobile developers building React, Next.js, Node.js, and cloud database engines.",
+    skills: [
+      { name: "TypeScript & JavaScript (ES6+)", level: "Expert" },
+      { name: "React (Vite, Next.js, Redux)", level: "Expert" },
+      { name: "Node.js (Express, Microservices)", level: "Intermediate" },
+      { name: "PostgreSQL & MongoDB (Prisma, Mongoose)", level: "Intermediate" },
+      { name: "Git, GitHub Actions CI/CD, Docker", level: "Intermediate" },
+      { name: "RESTful APIs & GraphQL Architectures", level: "Expert" },
+      { name: "Tailwind CSS & Responsive Layouts", level: "Expert" }
+    ],
+    certifications: [
+      { name: "AWS Certified Developer – Associate", organization: "Amazon Web Services", year: "2025" },
+      { name: "Meta Professional Full-Stack Specialization", organization: "Coursera", year: "2024" }
+    ],
+    languages: [
+      { name: "English", proficiency: "Fluent" },
+      { name: "Spanish", proficiency: "Conversational" }
+    ]
+  },
+  {
+    name: "Cloud, Infrastructure & DevOps Specialist",
+    role: "Cloud DevOps Engineer",
+    iconType: "cloud",
+    description: "Perfect for engineers focused on high-availability cloud cluster deployments, CI/CD, and IaC lines.",
+    skills: [
+      { name: "Kubernetes & Docker Orchestration", level: "Expert" },
+      { name: "Terraform Infrastructure-as-code (IaC)", level: "Expert" },
+      { name: "AWS Cloud Stack (EC2, S3, RDS, Lambda)", level: "Expert" },
+      { name: "CI/CD (GitHub Actions, GitLab Pipelines)", level: "Expert" },
+      { name: "Linux Bash Scripting & Python Automation", level: "Intermediate" },
+      { name: "Monitoring & Alerting (Prometheus, Grafana)", level: "Intermediate" },
+      { name: "Network Security, OAuth & IAM Policies", level: "Intermediate" }
+    ],
+    certifications: [
+      { name: "AWS Certified DevOps Engineer – Professional", organization: "Amazon Web Services", year: "2025" },
+      { name: "Certified Kubernetes Administrator (CKA)", organization: "The Linux Foundation", year: "2024" }
+    ],
+    languages: [
+      { name: "English", proficiency: "Fluent" }
+    ]
+  },
+  {
+    name: "AI & Data Science Architect",
+    role: "AI & Data Engineer",
+    iconType: "ai",
+    description: "Deep blueprint for developers exploring machine learning, neural pipelines, and predictive analysis.",
+    skills: [
+      { name: "Python (NumPy, Pandas, Scikit-learn)", level: "Expert" },
+      { name: "Machine Learning & Neural Network Foundations", level: "Intermediate" },
+      { name: "Generative AI Engineering (Google Gemini API SDK)", level: "Expert" },
+      { name: "SQL (Complex Query & Window Joins)", level: "Expert" },
+      { name: "Data Engineering Pipelines & Apache Airflow", level: "Intermediate" },
+      { name: "TensorFlow & PyTorch Core Models", level: "Intermediate" },
+      { name: "Data Visualisation (Tableau, D3.js Charts)", level: "Intermediate" }
+    ],
+    certifications: [
+      { name: "Google Cloud Professional Data Engineer", organization: "Google Cloud Platform", year: "2025" },
+      { name: "DeepLearning.AI TensorFlow Specialist", organization: "DeepLearning.AI", year: "2024" }
+    ],
+    languages: [
+      { name: "English", proficiency: "Fluent" },
+      { name: "Mandarin", proficiency: "Beginner" }
+    ]
+  },
+  {
+    name: "Product, Agile & Project Strategy Leader",
+    role: "Product Manager",
+    iconType: "strategy",
+    description: "Designed for leaders orchestrating metrics, agile sprint ceremonies, and visual strategic milestones.",
+    skills: [
+      { name: "Agile, Scrum & Kanban Sprints", level: "Expert" },
+      { name: "Product Strategy & Competitive Benchmarking", level: "Expert" },
+      { name: "Behavioral Analytics & GA4 Telemetry", level: "Intermediate" },
+      { name: "Stakeholder Alignment & Cross-functional Leadership", level: "Expert" },
+      { name: "Jira, Confluence & Notion Roadmapping", level: "Expert" },
+      { name: "A/B Testing & Conversion Rate Optimization", level: "Intermediate" }
+    ],
+    certifications: [
+      { name: "Certified Scrum Product Owner (CSPO)", organization: "Scrum Alliance", year: "2024" },
+      { name: "Product Management Certificate (PMC-I)", organization: "Product School", year: "2025" }
+    ],
+    languages: [
+      { name: "English", proficiency: "Native" }
+    ]
+  },
+  {
+    name: "Growth Marketer & Digital Strategist",
+    role: "Marketer",
+    iconType: "marketing",
+    description: "Interactive blueprint for copywriters, acquisition specialist loops, and analytics funnels.",
+    skills: [
+      { name: "SEO Optimization & SEM Campaigns (Google Ads)", level: "Expert" },
+      { name: "Direct Copywriting & Audience Persona Modeling", level: "Expert" },
+      { name: "Google Analytics 4 & Attribution Reporting", level: "Expert" },
+      { name: "CRM Email Campaigns & ActiveCampaign Automation", level: "Intermediate" },
+      { name: "A/B Testing Hubspot Landing Pages", level: "Intermediate" },
+      { name: "Paid Social Growth (Meta, LinkedIn Ecosystems)", level: "Expert" }
+    ],
+    certifications: [
+      { name: "Google Analytics Individual Qualification", organization: "Google Academy", year: "2024" },
+      { name: "HubSpot Inbound Marketing Certification", organization: "HubSpot Academy", year: "2025" }
+    ],
+    languages: [
+      { name: "English", proficiency: "Native" },
+      { name: "German", proficiency: "Fluent" }
+    ]
+  }
+];
 
 interface ResumeFormProps {
   data: ResumeData;
@@ -18,6 +132,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
   const [enhancingField, setEnhancingField] = useState<string | null>(null);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [selectedBlueprintIndex, setSelectedBlueprintIndex] = useState<number | null>(null);
 
   // Form updater
   const updatePersonal = (field: string, value: string) => {
@@ -125,6 +240,49 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
       ...data,
       languages: data.languages.map(l => l.id === id ? { ...l, [field]: value } : l),
     });
+  };
+
+  const applyBlueprint = (blueprintIndex: number, overwrite: boolean) => {
+    const bp = OUTSHELL_BLUEPRINTS[blueprintIndex];
+    if (!bp) return;
+
+    const newSkills = bp.skills.map((s, idx) => ({
+      id: `sk-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      name: s.name,
+      level: s.level as "Beginner" | "Intermediate" | "Expert" | ""
+    }));
+
+    const newCerts = bp.certifications.map((c, idx) => ({
+      id: `cert-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      name: c.name,
+      organization: c.organization,
+      year: c.year
+    }));
+
+    const newLangs = bp.languages.map((l, idx) => ({
+      id: `lang-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      name: l.name,
+      proficiency: l.proficiency
+    }));
+
+    if (overwrite) {
+      onChange({
+        ...data,
+        skills: newSkills,
+        certifications: newCerts,
+        languages: newLangs
+      });
+      setSuccessToast(`Reset & applied ${bp.name} blueprint successfully!`);
+    } else {
+      onChange({
+        ...data,
+        skills: [...data.skills, ...newSkills],
+        certifications: [...data.certifications, ...newCerts],
+        languages: [...data.languages, ...newLangs]
+      });
+      setSuccessToast(`Merged ${bp.name} blueprints into your active list!`);
+    }
+    setTimeout(() => setSuccessToast(null), 5000);
   };
 
   // AI Integration: In-line ATS Enhancement via Server SDK proxy
@@ -598,160 +756,432 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
           </div>
         )}
 
-        {/* STEP 4: Skills */}
+        {/* STEP 4: Skills, Certifications & Languages */}
         {currentStep === 4 && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="text-base font-bold text-slate-900">Step 4: Skills, Certifications & Languages</h3>
+          <div className="space-y-6" id="skills-step-container">
+            {/* Header intro */}
+            <div className="bg-gradient-to-r from-blue-50/60 to-indigo-50/20 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-blue-600 shrink-0 mt-0.5 animate-pulse" />
+              <div>
+                <h3 className="text-sm font-bold text-slate-800">Visual Blueprint Injection & Construction</h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed font-medium mt-0.5">
+                  Accelerate your CV formulation by instating one of our highly focused **Career Direction Outshell Blueprints** below, or manually populate and perfect your credentials inside the 3-column organizer.
+                </p>
+              </div>
+            </div>
+
+            {/* Outshell Blueprint Presets Panel */}
+            <div className="space-y-3" id="blueprint-presets-section">
+              <label className="text-xs font-extrabold text-slate-700 uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                <Layers className="w-3.5 h-3.5 text-blue-600" />
+                <span>Select & Inject Career Blueprint</span>
+              </label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                {OUTSHELL_BLUEPRINTS.map((bp, bpIdx) => {
+                  const isSelected = selectedBlueprintIndex === bpIdx;
+                  return (
+                    <button
+                      key={bpIdx}
+                      type="button"
+                      id={`bp-button-${bpIdx}`}
+                      onClick={() => setSelectedBlueprintIndex(isSelected ? null : bpIdx)}
+                      className={`text-left p-3.5 rounded-xl border transition-all duration-300 relative ${
+                        isSelected
+                          ? "bg-blue-50/70 border-blue-600 shadow-md ring-1 ring-blue-500/20"
+                          : "bg-white border-slate-200 hover:border-slate-350 hover:bg-slate-50 shadow-3xs"
+                      }`}
+                    >
+                      {/* Floating Indicator */}
+                      {isSelected && (
+                        <span className="absolute top-2 right-2 flex h-4 w-4 bg-blue-600 rounded-full items-center justify-center text-[10px] text-white font-bold animate-scaleIn">
+                          ✓
+                        </span>
+                      )}
+                      
+                      {/* Icon Indicator */}
+                      <div className="mb-2">
+                        {bp.iconType === "developer" && <Cpu className={`w-5 h-5 ${isSelected ? "text-blue-700" : "text-indigo-550"}`} />}
+                        {bp.iconType === "cloud" && <Layers className={`w-5 h-5 ${isSelected ? "text-blue-700" : "text-sky-550"}`} />}
+                        {bp.iconType === "ai" && <ShieldCheck className={`w-5 h-5 ${isSelected ? "text-blue-700" : "text-purple-550"}`} />}
+                        {bp.iconType === "strategy" && <Award className={`w-5 h-5 ${isSelected ? "text-blue-700" : "text-amber-550"}`} />}
+                        {bp.iconType === "marketing" && <Globe className={`w-5 h-5 ${isSelected ? "text-blue-700" : "text-emerald-555"}`} />}
+                      </div>
+
+                      <h4 className="text-[11.5px] font-bold text-slate-800 leading-tight block truncate" title={bp.name}>
+                        {bp.name}
+                      </h4>
+                      <p className="text-[9.5px] text-slate-450 font-bold tracking-wide uppercase mt-0.5 font-mono">
+                        {bp.role}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Blueprint Preview Drawer */}
+              {selectedBlueprintIndex !== null && (
+                <div 
+                  className="p-4 bg-white border border-blue-200 rounded-xl space-y-4 shadow-sm animate-fadeIn"
+                  id="blueprint-preview-drawer"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-bold bg-blue-105 text-blue-700 px-2 py-0.5 rounded-full uppercase tracking-widest font-mono">
+                          Selected Blueprint Outshell
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 mt-1">
+                        {OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].name} Preset Preview
+                      </h4>
+                      <p className="text-[11px] text-slate-500 leading-normal font-medium">
+                        {OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        id="btn-merge-blueprint"
+                        onClick={() => {
+                          applyBlueprint(selectedBlueprintIndex, false);
+                          setSelectedBlueprintIndex(null);
+                        }}
+                        className="px-3 py-1.5 text-[11px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-105 rounded-lg border border-blue-200 flex items-center gap-1.5 transition active:scale-[0.97]"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Merge Blueprint
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-overwrite-blueprint"
+                        onClick={() => {
+                          if (window.confirm("This action will clear all of your current skills, certificates, and languages on Step 4 and replace them with this catalog blueprint. Proceed?")) {
+                            applyBlueprint(selectedBlueprintIndex, true);
+                            setSelectedBlueprintIndex(null);
+                          }
+                        }}
+                        className="px-3 py-1.5 text-[11px] font-bold bg-slate-900 text-white hover:bg-slate-800 rounded-lg flex items-center gap-1.5 transition active:scale-[0.97]"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Clear & Overwrite List
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visual Items Preview Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11.5px]">
+                    {/* Skills preview */}
+                    <div className="space-y-1.5 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                      <p className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider font-mono">Curated Core Skills ({OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].skills.length})</p>
+                      <div className="flex flex-wrap gap-1">
+                        {OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].skills.map((s, sIdx) => (
+                          <span key={sIdx} className="inline-flex items-center gap-1 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-md border border-slate-200">
+                            {s.name}
+                            <span className="text-[8.5px] font-bold text-indigo-650 opacity-80 uppercase">({s.level})</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Certifications preview */}
+                    <div className="space-y-1.5 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                      <p className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider font-mono font-sans">Curated Certifications ({OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].certifications.length})</p>
+                      <ul className="space-y-1 text-[10.5px] text-slate-600 font-medium">
+                        {OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].certifications.map((c, cIdx) => (
+                          <li key={cIdx} className="flex items-start gap-1">
+                            <span className="text-amber-500 font-bold shrink-0">★</span>
+                            <span className="leading-tight"><strong className="text-slate-800 font-bold">{c.name}</strong> – {c.organization} ({c.year})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Languages preview */}
+                    <div className="space-y-1.5 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                      <p className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider font-mono">Curated Dialects ({OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].languages.length})</p>
+                      <div className="flex flex-wrap gap-1">
+                        {OUTSHELL_BLUEPRINTS[selectedBlueprintIndex].languages.map((l, lIdx) => (
+                          <span key={lIdx} className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-150 font-semibold px-2 py-0.5 rounded-md capitalize">
+                            {l.name} ({l.proficiency})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* List Construction Area Header */}
+            <div className="flex justify-between items-center border-b pb-2 pt-2">
+              <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-blue-600" />
+                <span>Pristine Details Customizer</span>
+              </h4>
               <div className="flex gap-2">
                 <button
                   type="button"
+                  id="add-skill-button"
                   onClick={addSkill}
-                  className="px-2.5 py-1 text-xs font-semibold bg-slate-900 text-white rounded-lg flex items-center gap-1 transition text-[11px]"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg flex items-center gap-1 transition-all"
                 >
-                  <Plus className="w-3 h-3" /> Skill
+                  <Plus className="w-3.5 h-3.5" /> Skill
                 </button>
                 <button
                   type="button"
+                  id="add-cert-button"
                   onClick={addCertification}
-                  className="px-2.5 py-1 text-xs font-semibold bg-slate-900 text-white rounded-lg flex items-center gap-1 transition text-[11px]"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg flex items-center gap-1 transition-all"
                 >
-                  <Plus className="w-3 h-3" /> Certificate
+                  <Plus className="w-3.5 h-3.5" /> Certificate
                 </button>
                 <button
                   type="button"
+                  id="add-lang-button"
                   onClick={addLanguage}
-                  className="px-2.5 py-1 text-xs font-semibold bg-slate-900 text-white rounded-lg flex items-center gap-1 transition text-[11px]"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg flex items-center gap-1 transition-all"
                 >
-                  <Plus className="w-3 h-3" /> Language
+                  <Plus className="w-3.5 h-3.5" /> Language
                 </button>
               </div>
             </div>
 
-            {/* Subgrid */}
+            {/* Subgrid of organizer panels */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Skills Area */}
-              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest border-b pb-1">Core Tech & Soft Skills</h4>
-                {data.skills.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 py-4 text-center">No skills added.</p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {data.skills.map(s => (
-                      <div key={s.id} className="flex gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-3xs">
-                        <input
-                          type="text"
-                          value={s.name}
-                          onChange={(e) => updateSkill(s.id, "name", e.target.value)}
-                          placeholder="e.g. TypeScript"
-                          className="flex-1 px-1.5 py-1 text-xs border rounded-sm outline-none focus:border-blue-600"
-                        />
-                        <select
-                          value={s.level}
-                          onChange={(e) => updateSkill(s.id, "level", e.target.value)}
-                          className="text-[10px] bg-slate-50 border rounded-sm p-1"
-                        >
-                          <option value="Expert">Expert</option>
-                          <option value="Intermediate">Intermediate</option>
-                          <option value="Beginner">Beginner</option>
-                          <option value="">Hide level</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(s.id)}
-                          className="text-slate-400 hover:text-red-500 transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+              
+              {/* SKILLS COLUMN */}
+              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col justify-between" id="skills-form-column">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                    <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Cpu className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>Technical & Soft Core Skills</span>
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono bg-white px-1.5 py-0.2 border border-slate-150 rounded-md">
+                      {data.skills.length} Items
+                    </span>
                   </div>
-                )}
+
+                  {data.skills.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center space-y-1 bg-white border border-dashed border-slate-200 rounded-xl p-4">
+                      <Cpu className="w-6 h-6 text-slate-300" />
+                      <p className="text-[11px] font-medium leading-normal">No custom skills created.</p>
+                      <button type="button" onClick={addSkill} className="text-[10px] text-blue-600 hover:underline font-bold mt-1">
+                        + Add Skill
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {data.skills.map(s => {
+                        return (
+                          <div key={s.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 select-container">
+                            <div className="flex gap-2 items-center justify-between">
+                              <input
+                                type="text"
+                                value={s.name}
+                                onChange={(e) => updateSkill(s.id, "name", e.target.value)}
+                                placeholder="e.g. React.js"
+                                className="flex-1 px-2 py-1 text-xs border border-slate-200 bg-white rounded-lg outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-semibold"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeSkill(s.id)}
+                                className="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition shrink-0"
+                                title="Remove skill item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            
+                            {/* Horizontal Button Level Selector Pill */}
+                            <div className="flex items-center gap-1 justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider ml-1 font-mono">LVL:</span>
+                              <div className="flex gap-0.5 justify-end">
+                                {[
+                                  { label: "Beg", val: "Beginner", col: "active:bg-sky-500 text-sky-700 bg-sky-50 border-sky-100 focus:ring-sky-300" },
+                                  { label: "Mid", val: "Intermediate", col: "active:bg-indigo-500 text-indigo-700 bg-indigo-50 border-indigo-100 focus:ring-indigo-300" },
+                                  { label: "Exp", val: "Expert", col: "active:bg-emerald-500 text-emerald-700 bg-emerald-50 border-emerald-100 focus:ring-emerald-300" }
+                                ].map((choice) => {
+                                  const active = s.level === choice.val;
+                                  return (
+                                    <button
+                                      key={choice.val}
+                                      type="button"
+                                      onClick={() => updateSkill(s.id, "level", s.level === choice.val ? "" : (choice.val as any))}
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                                        active
+                                          ? `shadow-3xs ${choice.col.split(' ')[1]} ${choice.col.split(' ')[2]} border-current ring-1 ring-offset-0`
+                                          : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      {choice.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Certifications Area */}
-              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest border-b pb-1">Certifications</h4>
-                {data.certifications.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 py-4 text-center">No certifications.</p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {data.certifications.map(c => (
-                      <div key={c.id} className="bg-white p-2.5 rounded-lg border border-slate-200. shadow-3xs space-y-1.5 relative">
-                        <button
-                          type="button"
-                          onClick={() => removeCertification(c.id)}
-                          className="absolute right-1.5 top-1.5 text-slate-400 hover:text-red-500"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <input
-                          type="text"
-                          value={c.name}
-                          onChange={(e) => updateCertification(c.id, "name", e.target.value)}
-                          placeholder="Certificate Name"
-                          className="w-full px-1.5 py-1 text-xs border rounded-sm outline-none focus:border-blue-600"
-                        />
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <input
-                            type="text"
-                            value={c.organization}
-                            onChange={(e) => updateCertification(c.id, "organization", e.target.value)}
-                            placeholder="Organization"
-                            className="px-1.5 py-0.5 text-[10px] border rounded-sm outline-none"
-                          />
-                          <input
-                            type="text"
-                            value={c.year}
-                            onChange={(e) => updateCertification(c.id, "year", e.target.value)}
-                            placeholder="Year"
-                            className="px-1.5 py-0.5 text-[10px] border rounded-sm outline-none"
-                          />
+              {/* CERTIFICATIONS COLUMN */}
+              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col justify-between" id="certs-form-column">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                    <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>Certifications & Honors</span>
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono bg-white px-1.5 py-0.2 border border-slate-150 rounded-md">
+                      {data.certifications.length} Items
+                    </span>
+                  </div>
+
+                  {data.certifications.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center space-y-1 bg-white border border-dashed border-slate-200 rounded-xl p-4">
+                      <Award className="w-6 h-6 text-slate-300" />
+                      <p className="text-[11px] font-medium leading-normal">No certificates logged.</p>
+                      <button type="button" onClick={addCertification} className="text-[10px] text-blue-600 hover:underline font-bold mt-1">
+                        + Add Credentials
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {data.certifications.map(c => (
+                        <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs space-y-2 relative group animate-slideIn">
+                          <button
+                            type="button"
+                            onClick={() => removeCertification(c.id)}
+                            className="absolute right-1.5 top-1.5 p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
+                            title="Remove certification"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          
+                          <div className="space-y-1">
+                            <span className="text-[8.5px] font-black uppercase text-slate-400 tracking-wide font-mono block">Credential Name</span>
+                            <input
+                              type="text"
+                              value={c.name}
+                              onChange={(e) => updateCertification(c.id, "name", e.target.value)}
+                              placeholder="AWS Certified Solutions Architect"
+                              className="w-full px-2 py-1 text-xs border border-slate-200 bg-white rounded-lg outline-none focus:border-blue-600 font-semibold"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-5 gap-1.5">
+                            <div className="col-span-3 space-y-0.5">
+                              <span className="text-[8.5px] font-black uppercase text-slate-400 tracking-wide font-mono block">Issuer</span>
+                              <input
+                                type="text"
+                                value={c.organization}
+                                onChange={(e) => updateCertification(c.id, "organization", e.target.value)}
+                                placeholder="Amazon Web Services"
+                                className="w-full px-1.5 py-0.5 text-[10px] border border-slate-200 bg-white rounded-md outline-none"
+                              />
+                            </div>
+                            <div className="col-span-2 space-y-0.5">
+                              <span className="text-[8.5px] font-black uppercase text-slate-400 tracking-wide font-mono block">Year Issued</span>
+                              <input
+                                type="text"
+                                value={c.year}
+                                onChange={(e) => updateCertification(c.id, "year", e.target.value)}
+                                placeholder="2025"
+                                className="w-full px-1.5 py-0.5 text-[10px] border border-slate-200 bg-white rounded-md outline-none font-semibold text-center"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Languages Area */}
-              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest border-b pb-1 font-sans">Languages</h4>
-                {data.languages.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 py-4 text-center">No languages added.</p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {data.languages.map(l => (
-                      <div key={l.id} className="flex gap-2 items-center bg-white p-2 rounded-lg border border-slate-200 shadow-3xs">
-                        <input
-                          type="text"
-                          value={l.name}
-                          onChange={(e) => updateLanguage(l.id, "name", e.target.value)}
-                          placeholder="Language"
-                          className="flex-1 px-1.5 py-1 text-xs border rounded-sm outline-none"
-                        />
-                        <select
-                          value={l.proficiency}
-                          onChange={(e) => updateLanguage(l.id, "proficiency", e.target.value)}
-                          className="text-[10px] bg-slate-50 border rounded-sm p-1"
-                        >
-                          <option value="Native">Native</option>
-                          <option value="Fluent">Fluent</option>
-                          <option value="Conversational">Conversational</option>
-                          <option value="Beginner">Beginner</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => removeLanguage(l.id)}
-                          className="text-slate-400 hover:text-red-500 transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+              {/* LANGUAGES COLUMN */}
+              <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col justify-between" id="langs-form-column">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                    <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-emerald-555 shrink-0" />
+                      <span>Languages & Cultural Dialects</span>
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono bg-white px-1.5 py-0.2 border border-slate-150 rounded-md">
+                      {data.languages.length} Items
+                    </span>
                   </div>
-                )}
+
+                  {data.languages.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center space-y-1 bg-white border border-dashed border-slate-200 rounded-xl p-4">
+                      <Globe className="w-6 h-6 text-slate-300" />
+                      <p className="text-[11px] font-medium leading-normal">No dialects listed.</p>
+                      <button type="button" onClick={addLanguage} className="text-[10px] text-blue-600 hover:underline font-bold mt-1">
+                        + Add Dialect
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {data.languages.map(l => (
+                        <div key={l.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 flex flex-col animate-slideIn">
+                          <div className="flex gap-2 items-center justify-between">
+                            <input
+                              type="text"
+                              value={l.name}
+                              onChange={(e) => updateLanguage(l.id, "name", e.target.value)}
+                              placeholder="e.g. English"
+                              className="flex-1 px-2 py-1 text-xs border border-slate-200 bg-white rounded-lg outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 font-semibold"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeLanguage(l.id)}
+                              className="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition shrink-0"
+                              title="Delete dialect"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Horizontal Button Proficiency Selector Tag */}
+                          <div className="flex items-center gap-1 justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider ml-1 font-mono">FLK:</span>
+                            <div className="flex flex-wrap gap-0.5 justify-end">
+                              {[
+                                { label: "Native", col: "text-emerald-700 bg-emerald-50 border-emerald-100" },
+                                { label: "Fluent", col: "text-blue-700 bg-blue-50 border-blue-100" },
+                                { label: "Conversational", col: "text-indigo-700 bg-indigo-50 border-indigo-100" },
+                                { label: "Beginner", col: "text-slate-755 bg-slate-100 border-slate-200" }
+                              ].map((prof) => {
+                                const active = l.proficiency === prof.label;
+                                return (
+                                  <button
+                                    key={prof.label}
+                                    type="button"
+                                    onClick={() => updateLanguage(l.id, "proficiency", prof.label)}
+                                    className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                                      active
+                                        ? `shadow-3xs ${prof.col.split(' ')[0]} ${prof.col.split(' ')[1]} border-current font-extrabold ring-1 ring-offset-0`
+                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100"
+                                    }`}
+                                  >
+                                    {prof.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+
             </div>
           </div>
         )}
