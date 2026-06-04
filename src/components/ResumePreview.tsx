@@ -86,11 +86,12 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
     const shapeClass = 
       selectedAvatarShape === "rounded" ? "rounded-xl" :
       selectedAvatarShape === "sharp" ? "rounded-none border-2" : "rounded-full";
-    const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(personal.email || personal.fullName || "Akash")}`;
+    const avatarUrl = personal.photoUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(personal.email || personal.fullName || "Akash")}`;
     return (
       <img
         src={avatarUrl}
         alt={personal.fullName || "Portrait"}
+        referrerPolicy="no-referrer"
         className={`w-16 h-16 object-cover bg-slate-50 border border-slate-200 shadow-3xs shrink-0 ${shapeClass}`}
         style={{ borderColor: selectedColor }}
       />

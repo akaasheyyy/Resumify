@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { ResumeData, Education, Experience, Skill, Project, Certification, Language } from "../types";
-import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2, AlertCircle, X, Award, BookOpen, Globe, RefreshCw, Cpu, Layers, ShieldCheck } from "lucide-react";
+import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2, AlertCircle, X, Award, BookOpen, Globe, RefreshCw, Cpu, Layers, ShieldCheck, Camera, Upload, Link } from "lucide-react";
 
 const OUTSHELL_BLUEPRINTS = [
   {
@@ -133,6 +133,8 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [selectedBlueprintIndex, setSelectedBlueprintIndex] = useState<number | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [compressingPhoto, setCompressingPhoto] = useState(false);
 
   // Form updater
   const updatePersonal = (field: string, value: string) => {
@@ -143,6 +145,66 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
         [field]: value,
       },
     });
+  };
+
+  const handlePhotoFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setErrorToast("Please upload an image file (PNG, JPG, WebP, SVG, SEC, etc.)");
+      setTimeout(() => setErrorToast(null), 5000);
+      return;
+    }
+
+    setCompressingPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imgUrl = event.target?.result as string;
+      
+      const img = new Image();
+      img.onload = () => {
+        // Enforce maximum width/height of 250px to keep firestore payloads incredibly safe and lightweight
+        const maxDim = 250;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          updatePersonal("photoUrl", compressedDataUrl);
+          setSuccessToast("Photo processed & optimized successfully!");
+          setTimeout(() => setSuccessToast(null), 5000);
+        } else {
+          updatePersonal("photoUrl", imgUrl);
+        }
+        setCompressingPhoto(false);
+      };
+      img.onerror = () => {
+        setErrorToast("Failed to load image. Try another photo format.");
+        setTimeout(() => setErrorToast(null), 5000);
+        setCompressingPhoto(false);
+      };
+      img.src = imgUrl;
+    };
+    reader.onerror = () => {
+      setErrorToast("Failed to read image file.");
+      setTimeout(() => setErrorToast(null), 5000);
+      setCompressingPhoto(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   // List updaters
@@ -538,6 +600,157 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                   className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none"
                 />
               </div>
+            </div>
+
+            {/* PROFILE PICTURE MANAGEMENT SECTION */}
+            <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-250 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <div className="flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-blue-600" />
+                  <h4 className="text-xs font-extrabold text-slate-850 uppercase tracking-wider">
+                    Profile Portfolio Photo
+                  </h4>
+                </div>
+                {/* Switch to enable/disable */}
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!data.showAvatar}
+                    onChange={(e) => onChange({ ...data, showAvatar: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span>Show Portrait on Resume</span>
+                </label>
+              </div>
+
+              {data.showAvatar && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                  {/* LEFT: Live Preview Frame */}
+                  <div className="md:col-span-3 flex flex-col items-center justify-center space-y-2 bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Live Frame Preview</span>
+                    
+                    <div className="relative group shrink-0">
+                      <img
+                        src={data.personal.photoUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(data.personal.email || data.personal.fullName || "Akash")}`}
+                        alt={data.personal.fullName || "Portrait Preview"}
+                        referrerPolicy="no-referrer"
+                        className={`w-20 h-20 object-cover bg-slate-100 border border-slate-300 shadow-2xs ${
+                          data.selectedAvatarShape === "rounded" ? "rounded-xl" :
+                          data.selectedAvatarShape === "sharp" ? "rounded-none" : "rounded-full"
+                        }`}
+                        style={{ borderColor: data.selectedColor }}
+                      />
+                      {data.personal.photoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => updatePersonal("photoUrl", "")}
+                          className="absolute -top-1.5 -right-1.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 rounded-full p-1 shadow-3xs transition active:scale-95"
+                          title="Remove custom photo and fallback to avatar"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Frame shapes selector */}
+                    <div className="flex gap-1 justify-center pt-2">
+                      {[
+                        { label: "Circle", val: "circle" },
+                        { label: "Rounded", val: "rounded" },
+                        { label: "Sharp", val: "sharp" }
+                      ].map((item) => (
+                        <button
+                          key={item.val}
+                          type="button"
+                          onClick={() => onChange({ ...data, selectedAvatarShape: item.val as any })}
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all ${
+                            (data.selectedAvatarShape || "circle") === item.val
+                              ? "bg-slate-900 border-slate-900 text-white shadow-3xs"
+                              : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Upload and URL controls */}
+                  <div className="md:col-span-9 space-y-4">
+                    {/* Drag and Drop Zone */}
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragActive(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setDragActive(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragActive(false);
+                        if (e.dataTransfer.files?.[0]) {
+                          handlePhotoFile(e.dataTransfer.files[0]);
+                        }
+                      }}
+                      onClick={() => document.getElementById("photo-upload-input")?.click()}
+                      className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-1.5 ${
+                        dragActive
+                          ? "border-blue-500 bg-blue-50/55"
+                          : "border-slate-250 bg-white hover:border-slate-400 hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <input
+                        type="file"
+                        id="photo-upload-input"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            handlePhotoFile(e.target.files[0]);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      
+                      {compressingPhoto ? (
+                        <>
+                          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                          <p className="text-[11px] font-extrabold text-blue-600 animate-pulse">Resizing & Compressing Photo...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-slate-400" />
+                          <p className="text-[11.5px] font-bold text-slate-700">
+                            Upload portrait photo from your computer
+                          </p>
+                          <p className="text-[9.5px] text-slate-500 font-medium leading-none">
+                            Supports any photo format (PNG, JPEG, WebP, SVG, GIF, etc.). Drag & Drop or click to browse.
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Manual web URL input */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider font-mono flex items-center gap-1">
+                        <Link className="w-3 h-3 text-slate-450" />
+                        <span>Or specify web image path address (URL)</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={data.personal.photoUrl?.startsWith("data:") ? "" : data.personal.photoUrl || ""}
+                        onChange={(e) => updatePersonal("photoUrl", e.target.value)}
+                        placeholder="https://example.com/portrait.jpg"
+                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none"
+                      />
+                      <p className="text-[9px] text-slate-500 font-medium leading-normal">
+                        Direct web address of your hosted photo profile. If empty, a beautiful dynamic seed profile will be active in place.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Resume Summary with AI generator widget */}
@@ -949,7 +1162,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
             </div>
 
             {/* Subgrid of organizer panels */}
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* SKILLS COLUMN */}
               <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col justify-between" id="skills-form-column">
