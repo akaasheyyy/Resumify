@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { ResumeData, Education, Experience, Skill, Project, Certification, Language } from "../types";
-import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Trash2, ChevronRight, ChevronLeft, Check, Wand2, Info, Loader2, AlertCircle, X } from "lucide-react";
 
 interface ResumeFormProps {
   data: ResumeData;
@@ -16,6 +16,8 @@ interface ResumeFormProps {
 export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [enhancingField, setEnhancingField] = useState<string | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   // Form updater
   const updatePersonal = (field: string, value: string) => {
@@ -129,6 +131,8 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
   const handleAIEnhanceSummary = async () => {
     if (enhancingField) return;
     setEnhancingField("summary");
+    setErrorToast(null);
+    setSuccessToast(null);
     try {
       const response = await fetch("/api/ai/enhance", {
         method: "POST",
@@ -136,74 +140,84 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
         body: JSON.stringify({
           type: "summary",
           payload: {
-            careerGoal: data.personal.jobTitle,
-            skills: data.skills.map(s => s.name).join(", "),
-            experience: data.experience.map(e => `${e.jobTitle} at ${e.companyName}`).join("; "),
-            education: data.education.map(ed => ed.degree).join("; "),
+            careerGoal: data?.personal?.jobTitle || "",
+            skills: data?.skills?.map(s => s.name).filter(Boolean).join(", ") || "",
+            experience: data?.experience?.map(e => `${e.jobTitle || ""} at ${e.companyName || ""}`).filter(Boolean).join("; ") || "",
+            education: data?.education?.map(ed => ed.degree || "").filter(Boolean).join("; ") || "",
           },
         }),
       });
       const resData = await response.json();
       if (resData.output) {
         updatePersonal("summary", resData.output.trim());
+        setSuccessToast("Professional bio generated & optimized successfully!");
+        setTimeout(() => setSuccessToast(null), 5000);
       } else if (resData.error) {
-        alert(resData.error);
+        setErrorToast(resData.error);
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to communicate with AI server. Ensure your Gemini API Key is set.");
+      setErrorToast("Failed to communicate with AI server. Ensure your Gemini API Key is set.");
     } finally {
       setEnhancingField(null);
     }
   };
 
   const handleAIEnhanceExperience = async (id: string, jobTitle: string, companyName: string, raw: string) => {
-    if (enhancingField || !raw.trim()) return;
+    if (enhancingField || !raw?.trim()) return;
     setEnhancingField(`exp-${id}`);
+    setErrorToast(null);
+    setSuccessToast(null);
     try {
       const response = await fetch("/api/ai/enhance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "experience",
-          payload: { jobTitle, companyName, rawResponsibilities: raw },
+          payload: { jobTitle: jobTitle || "", companyName: companyName || "", rawResponsibilities: raw || "" },
         }),
       });
       const resData = await response.json();
       if (resData.output) {
         updateExperience(id, "responsibilities", resData.output.trim());
+        setSuccessToast("Experience bullet points optimized successfully!");
+        setTimeout(() => setSuccessToast(null), 5000);
       } else if (resData.error) {
-        alert(resData.error);
+        setErrorToast(resData.error);
       }
     } catch (err) {
       console.error(err);
-      alert("Error enhancing experience bullet points.");
+      setErrorToast("Error enhancing experience bullet points.");
     } finally {
       setEnhancingField(null);
     }
   };
 
   const handleAIEnhanceProject = async (id: string, projectName: string, tech: string, desc: string) => {
-    if (enhancingField || !desc.trim()) return;
+    if (enhancingField || !desc?.trim()) return;
     setEnhancingField(`proj-${id}`);
+    setErrorToast(null);
+    setSuccessToast(null);
     try {
       const response = await fetch("/api/ai/enhance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "project",
-          payload: { projectName, technologiesUsed: tech, description: desc },
+          payload: { projectName: projectName || "", technologiesUsed: tech || "", description: desc || "" },
         }),
       });
       const resData = await response.json();
       if (resData.output) {
         updateProject(id, "description", resData.output.trim());
+        setSuccessToast("Project details enhanced successfully!");
+        setTimeout(() => setSuccessToast(null), 5000);
       } else if (resData.error) {
-        alert(resData.error);
+        setErrorToast(resData.error);
       }
     } catch (err) {
       console.error(err);
-      alert("Error generating technical project description.");
+      setErrorToast("Error generating technical project description.");
     } finally {
       setEnhancingField(null);
     }
@@ -253,6 +267,33 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
 
       {/* Form Content */}
       <div className="p-6 min-h-[460px]">
+        {errorToast && (
+          <div className="mb-4 p-3.5 bg-red-50 border border-red-250 text-red-800 rounded-xl flex items-start justify-between text-xs animate-fadeIn shadow-3xs" id="form-error-toast">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-650 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold">Optimization Failure</p>
+                <p className="leading-relaxed text-slate-705 font-medium">{errorToast}</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setErrorToast(null)} className="p-1 hover:bg-red-100 rounded-lg transition text-red-800 shrink-0">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {successToast && (
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-850 rounded-xl flex items-center justify-between text-xs animate-fadeIn shadow-3xs" id="form-success-toast">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="font-semibold">{successToast}</span>
+            </div>
+            <button type="button" onClick={() => setSuccessToast(null)} className="p-1 hover:bg-emerald-100 rounded-lg transition text-emerald-800">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* API Warning if server has no key configured */}
         {aiStatus.status === "missing_key" && (
           <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2.5 text-xs text-amber-800 leading-relaxed shadow-3xs">
