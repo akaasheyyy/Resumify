@@ -460,43 +460,79 @@ export default function App() {
 
               {/* Cloud Sync Status Indicator block */}
               {session.isLoggedIn ? (
-                <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-3xs">
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <div id="sync-container" className="space-y-3">
+                  <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-3xs">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex h-2 w-2 shrink-0">
+                        {syncStatus === "error" ? (
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 animate-pulse"></span>
+                        ) : (
+                          <>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </>
+                        )}
+                      </div>
+                      <div>
+                        <p className={`text-xs font-bold ${syncStatus === "error" ? "text-red-700" : "text-slate-800"}`}>
+                          {syncStatus === "error" ? "Cloud Sync Failed / Offline" : "Secure Backup Enabled"}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase font-mono tracking-wider">Cloud Space: {session.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">Secure Backup Enabled</p>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase font-mono tracking-wider">Cloud Space: {session.email}</p>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold bg-slate-50/50">
+                      {syncStatus === "saving" && (
+                        <>
+                          <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin shrink-0" />
+                          <span className="text-blue-600 animate-pulse">Syncing...</span>
+                        </>
+                      )}
+                      {syncStatus === "saved" && (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-emerald-600">Saved to Cloud</span>
+                        </>
+                      )}
+                      {syncStatus === "idle" && (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-slate-500">Sync is idle</span>
+                        </>
+                      )}
+                      {syncStatus === "error" && (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          <span className="text-red-500 truncate max-w-[120px]" title={syncError}>Error Syncing</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold bg-slate-50/50">
-                    {syncStatus === "saving" && (
-                      <>
-                        <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin shrink-0" />
-                        <span className="text-blue-600 animate-pulse">Syncing...</span>
-                      </>
-                    )}
-                    {syncStatus === "saved" && (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-600">Saved to Cloud</span>
-                      </>
-                    )}
-                    {syncStatus === "idle" && (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-slate-500">Sync is idle</span>
-                      </>
-                    )}
-                    {syncStatus === "error" && (
-                      <>
-                        <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                        <span className="text-red-500 truncate" title={syncError}>Error syncing</span>
-                      </>
-                    )}
-                  </div>
+
+                  {syncStatus === "error" && (
+                    <div className="p-4 bg-red-50/70 border border-red-200 rounded-xl space-y-2 text-xs leading-relaxed text-slate-700 animate-fadeIn" id="sync-error-troubleshooting">
+                      <div className="flex items-center gap-1.5 text-red-800 font-bold">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-red-650" />
+                        <span>Cloud Database Offline – Setup Action Required</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 font-medium">
+                        The application is unable to reach the Google Firestore backend on project <strong className="text-slate-800">resumify-b4675</strong>. Please complete the following configuration steps in your Firebase Console to enable syncing:
+                      </p>
+                      <ul className="list-disc pl-5 text-[10.5px] space-y-1.5 text-slate-600 font-medium">
+                        <li>
+                          <strong>Create Firestore Database:</strong> Open the <a href="https://console.firebase.google.com/project/resumify-b4675/firestore" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-800 underline font-bold inline-flex items-center gap-0.5">Firebase Console for resumify-b4675 <span className="text-[8px]">↗</span></a>, navigate to <strong>Firestore Database</strong>, and click <strong>Create Database</strong>. Ensure you pick standard/default configurations.
+                        </li>
+                        <li>
+                          <strong>Verify Firestore Security Rules:</strong> Confirm that your custom Security Rules permit writes. In the Rules tab, you can set permission rules or deploy the provided <code>firestore.rules</code> file.
+                        </li>
+                        <li>
+                          <strong>Check Connection:</strong> If the database is already created, make sure you are online and that Firestore is not blocked by safe-browsing proxies or firewalls.
+                        </li>
+                      </ul>
+                      <div className="text-[10px] text-slate-500 leading-normal italic mt-2 bg-white/70 p-2.5 rounded-lg border border-red-100 font-mono break-all">
+                        <strong>Technical Diagnostics:</strong> {syncError}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/40 border border-blue-100 rounded-xl flex items-center justify-between shadow-3xs gap-3">

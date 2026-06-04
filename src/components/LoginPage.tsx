@@ -39,6 +39,10 @@ function formatAuthError(err: any): string {
   if (code === "auth/operation-not-allowed") {
     return "Email & Password Sign-In is not enabled on your Firebase Console. Please go to your Firebase Console under 'Authentication' > 'Sign-in method' and enable the 'Email/Password' provider.";
   }
+  if (code === "auth/unauthorized-domain") {
+    const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
+    return `Google Sign-In failed because the current domain ('${hostname}') is not authorized in your Firebase console. Please log into your Firebase Console, select your project 'resumify-b4675', navigate to 'Authentication' > 'Settings' > 'Authorized domains', and add '${hostname}' to the list of authorized domains.`;
+  }
   return msg.replace("Firebase: ", "") || "An unexpected error occurred.";
 }
 
