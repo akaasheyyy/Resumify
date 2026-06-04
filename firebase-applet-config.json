@@ -1,9 +1,10 @@
 {
   "projectId": "resumify-b4675",
-  "appId": "1:667328375045:web:e7a5c1fd83e9f0e2742f6c",
+  "appId": "1:667328375045:web:549d908dd05b00f7742f6c",
   "apiKey": "AIzaSyDQxrSb3w-5ZaW0SJCAmp44dTFhfMa4P3U",
   "authDomain": "resumify-b4675.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-897228b9-7993-4da2-ad73-4a0cc4891f5f",
   "storageBucket": "resumify-b4675.firebasestorage.app",
   "messagingSenderId": "667328375045",
-  "measurementId": "G-0WT2ZDK397"
+  "measurementId": ""
 }

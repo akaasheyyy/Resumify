@@ -777,7 +777,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                 <span>Select & Inject Career Blueprint</span>
               </label>
               
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                 {OUTSHELL_BLUEPRINTS.map((bp, bpIdx) => {
                   const isSelected = selectedBlueprintIndex === bpIdx;
                   return (
@@ -949,7 +949,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
             </div>
 
             {/* Subgrid of organizer panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               
               {/* SKILLS COLUMN */}
               <div className="space-y-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col justify-between" id="skills-form-column">
@@ -973,7 +973,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1 scrollbar-thin">
                       {data.skills.map(s => {
                         return (
                           <div key={s.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 select-container">
@@ -1052,7 +1052,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1 scrollbar-thin">
                       {data.certifications.map(c => (
                         <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs space-y-2 relative group animate-slideIn">
                           <button
@@ -1126,7 +1126,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1 scrollbar-thin">
                       {data.languages.map(l => (
                         <div key={l.id} className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-3xs space-y-2 flex flex-col animate-slideIn">
                           <div className="flex gap-2 items-center justify-between">
