@@ -355,6 +355,44 @@ ${text}
   }
 });
 
+// Endpoint 3: Send support reply email notification to customer
+app.post("/api/admin/send-email", async (req, res) => {
+  try {
+    const { customerEmail, customerName, ticketId, originalMessage, replyText } = req.body;
+    
+    if (!customerEmail || !replyText) {
+      return res.status(400).json({ error: "Missing customer email or reply text content." });
+    }
+
+    console.log("\n=======================================================");
+    console.log(`[SYS ADMIN - EMAIL DISPATCH SYSTEM - TO: ${customerEmail}]`);
+    console.log(`FROM: Team Resumify Support <support@resumify.com>`);
+    console.log(`SUBJECT: Re: Team Resumify Support ticket ${ticketId}`);
+    console.log("=======================================================");
+    console.log(`Dear ${customerName || "Customer"},`);
+    console.log("\nYour support enquiry submitted to Resumify was updated:");
+    console.log(`\nOriginal Message:\n"${originalMessage || ""}"`);
+    console.log(`\nResponse Reply:\n"${replyText}"`);
+    console.log("\n-------------------------------------------------------");
+    console.log("This message was automatically generated as requested.");
+    console.log("Status: Email dispatched successfully.");
+    console.log("=======================================================\n");
+
+    res.json({ 
+      success: true, 
+      message: `System successfully dispatched SMTP-simulated email to ${customerEmail}.`,
+      dispatchLog: {
+        to: customerEmail,
+        subject: `Re: Resumify Ticket ${ticketId}`,
+        preview: replyText.substring(0, 100)
+      }
+    });
+  } catch (error: any) {
+    console.error("Email simulated dispatch error:", error);
+    res.status(500).json({ error: "SMTP Dispatch simulation pipeline failure." });
+  }
+});
+
 // Configure Vite or Serve static assets
 async function start() {
   if (process.env.NODE_ENV !== "production") {

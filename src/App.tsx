@@ -125,6 +125,17 @@ export default function App() {
     return () => unsubscribe();
   }, [session.isLoggedIn]);
 
+  // Pre-seed contact form details upon user login
+  useEffect(() => {
+    if (session.isLoggedIn) {
+      setContactForm((prev) => ({
+        ...prev,
+        name: prev.name || session.fullName || "",
+        email: session.email || "",
+      }));
+    }
+  }, [session.isLoggedIn, session.fullName, session.email]);
+
   // Fetch Cloud resume data once upon login
   useEffect(() => {
     if (!session.isLoggedIn) {
@@ -730,10 +741,14 @@ export default function App() {
                     <input
                       type="email"
                       value={contactForm.email}
-                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      onChange={(e) => !session.isLoggedIn && setContactForm({ ...contactForm, email: e.target.value })}
+                      disabled={session.isLoggedIn}
                       placeholder="john@example.com"
-                      className="w-full px-3 py-2 bg-slate-850 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                      className={`w-full px-3 py-2 bg-slate-850 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 ${session.isLoggedIn ? "opacity-60 cursor-not-allowed bg-slate-900" : ""}`}
                     />
+                    {session.isLoggedIn && (
+                      <p className="text-[8.5px] text-slate-500 font-medium font-sans">Locked to your authenticated account email for secure ticket cataloguing.</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
