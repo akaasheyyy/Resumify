@@ -66,14 +66,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 import { doc, getDocFromServer } from "firebase/firestore";
 
 async function testConnection() {
+  const proj = firebaseConfig.projectId || "your-firebase-project";
   try {
     await getDocFromServer(doc(db, "test", "connection"));
   } catch (error) {
     if (error instanceof Error && error.message.includes("the client is offline")) {
       console.error(
         "Please check your Firebase configuration.\n" +
-        "Make sure Firestore Database is created and active on your Firebase project 'resumify-b4675'.\n" +
-        "Configure/Create it here: https://console.firebase.google.com/project/resumify-b4675/firestore"
+        `Make sure Firestore Database is created and active on your Firebase project '${proj}'.\n` +
+        `Configure/Create it here: https://console.firebase.google.com/project/${proj}/firestore`
       );
     } else {
       console.error("Firebase connection test validation anomaly:", error);

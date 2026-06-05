@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { LogIn, Mail, Lock, User, CheckCircle, Shield, Sparkles } from "lucide-react";
 import { auth, db } from "../lib/firebase";
+import firebaseConfig from "../../firebase-applet-config.json";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -36,12 +37,16 @@ function formatAuthError(err: any): string {
   if (code === "auth/invalid-email") {
     return "Please structure a valid email address representation.";
   }
+  if (code === "auth/popup-closed-by-user") {
+    return "Google login popup was closed before completion. If popups are disabled, please allow them in your browser.";
+  }
   if (code === "auth/operation-not-allowed") {
     return "Email & Password Sign-In is not enabled on your Firebase Console. Please go to your Firebase Console under 'Authentication' > 'Sign-in method' and enable the 'Email/Password' provider.";
   }
   if (code === "auth/unauthorized-domain") {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
-    return `Google Sign-In failed because the current domain ('${hostname}') is not authorized in your Firebase console. Please log into your Firebase Console, select your project 'resumify-b4675', navigate to 'Authentication' > 'Settings' > 'Authorized domains', and add '${hostname}' to the list of authorized domains.`;
+    const projId = firebaseConfig.projectId || "your-firebase-project";
+    return `Google Sign-In failed because the current domain ('${hostname}') is not authorized in your Firebase console. Please log into your Firebase Console, select your project '${projId}', navigate to 'Authentication' > 'Settings' > 'Authorized domains', and add '${hostname}' to the list of authorized domains.`;
   }
   return msg.replace("Firebase: ", "") || "An unexpected error occurred.";
 }

@@ -1,10 +1,10 @@
 {
-  "projectId": "resumify-b4675",
-  "appId": "1:667328375045:web:549d908dd05b00f7742f6c",
-  "apiKey": "AIzaSyDQxrSb3w-5ZaW0SJCAmp44dTFhfMa4P3U",
-  "authDomain": "resumify-b4675.firebaseapp.com",
+  "projectId": "gen-lang-client-0239857060",
+  "appId": "1:914627314175:web:8b0e4939792a8bd44ea7ca",
+  "apiKey": "AIzaSyCWsD2tWQB-ZI0H5Ut63OfishwXVsQR0yk",
+  "authDomain": "gen-lang-client-0239857060.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-897228b9-7993-4da2-ad73-4a0cc4891f5f",
-  "storageBucket": "resumify-b4675.firebasestorage.app",
-  "messagingSenderId": "667328375045",
+  "storageBucket": "gen-lang-client-0239857060.firebasestorage.app",
+  "messagingSenderId": "914627314175",
   "measurementId": ""
 }
