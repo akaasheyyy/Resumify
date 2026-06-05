@@ -9,6 +9,7 @@
         "fullName": { "type": "string", "description": "Full name of the user" },
         "email": { "type": "string", "format": "email", "description": "Email address" },
         "photoUrl": { "type": "string", "description": "Avatar URL of the user" },
+        "providerId": { "type": "string", "description": "Auth provider if registered (email or google.com)" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -103,6 +104,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "name", "email", "message"]
+    },
+    "visit": {
+      "title": "Visit",
+      "description": "Website visitor session or page load analytics telemetry record",
+      "type": "object",
+      "properties": {
+        "visitorId": { "type": "string", "description": "Randomized or persistent client session ID" },
+        "userId": { "type": "string", "description": "User ID of visitor if registered" },
+        "email": { "type": "string", "description": "Email of visitor if registered" },
+        "providerId": { "type": "string", "description": "Auth provider if registered" },
+        "userAgent": { "type": "string", "description": "Browser user agent info" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Visit timestamp record" }
+      },
+      "required": ["visitorId"]
     }
   },
   "firestore": {
@@ -121,6 +136,10 @@
     "/support_messages/{messageId}": {
       "schema": "support_message",
       "description": "Stores customer support messages and administrator replies"
+    },
+    "/visits/{visitId}": {
+      "schema": "visit",
+      "description": "Stores site visitor traffic page loads for admin statistics"
     }
   }
 }

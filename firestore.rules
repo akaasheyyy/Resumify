@@ -22,7 +22,11 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() 
-        && request.auth.token.email == "meakashsunilkk@gmail.com";
+        && (
+          request.auth.token.email == "meakashsunilkk@gmail.com"
+          || request.auth.uid == "Z0U3g177TzY9oIn6f995uB06eG72"
+          || (request.auth.token.keys().contains('email') && request.auth.token.email.matches('(?i)meakashsunilkk@gmail\\.com'))
+        );
     }
 
     function isValidId(id) {
@@ -40,13 +44,25 @@ service cloud.firestore {
     // --- Entity Validation Blueprints ---
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'fullName', 'email'])
-        && data.keys().size() <= 6
+        && data.keys().size() <= 8
         && data.uid is string && data.uid.size() <= 128
         && data.fullName is string && data.fullName.size() <= 200
         && data.email is string && data.email.size() <= 200
         && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 1000))
+        && (!('providerId' in data) || (data.providerId is string && data.providerId.size() <= 100))
         && (!('createdAt' in data) || data.createdAt is timestamp)
         && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidVisit(data) {
+      return data.keys().hasAll(['visitorId'])
+        && data.keys().size() <= 6
+        && data.visitorId is string && data.visitorId.size() <= 128
+        && (!('userId' in data) || data.userId is string || data.userId == null)
+        && (!('email' in data) || data.email is string || data.email == null)
+        && (!('providerId' in data) || data.providerId is string || data.providerId == null)
+        && (!('userAgent' in data) || data.userAgent is string || data.userAgent == null)
+        && (!('createdAt' in data) || data.createdAt is timestamp);
     }
 
     function isValidResume(data) {
@@ -155,7 +171,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId)
         && isValidUser(incoming())
         && incoming().uid == userId
@@ -165,13 +182,13 @@ service cloud.firestore {
         && incoming().uid == userId
         && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time
-        && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'photoUrl', 'updatedAt']);
+        && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'photoUrl', 'providerId', 'updatedAt']);
       allow delete: if false;
     }
 
     match /resumes/{resumeId} {
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid);
-      allow list: if isSignedIn() && (existing().userId == request.auth.uid);
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())
@@ -186,6 +203,11 @@ service cloud.firestore {
         && incoming().updatedAt == request.time;
       allow delete: if isSignedIn()
         && existing().userId == request.auth.uid;
+    }
+
+    match /visits/{visitId} {
+      allow create: if isValidId(visitId) && isValidVisit(incoming()) && (incoming().createdAt == request.time || !('createdAt' in incoming()));
+      allow get, list: if isAdmin();
     }
   }
 }

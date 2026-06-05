@@ -77,6 +77,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           fullName: resolvedName,
           email: firebaseUser.email || "",
           photoUrl: firebaseUser.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(firebaseUser.uid)}`,
+          providerId: "google.com",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -145,6 +146,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           fullName: resolvedName,
           email: firebaseUser.email || trimmedEmail.toLowerCase(),
           photoUrl: firebaseUser.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(firebaseUser.uid)}`,
+          providerId: "password",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });

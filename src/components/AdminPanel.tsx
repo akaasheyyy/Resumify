@@ -6,7 +6,8 @@
 import React, { useState, useEffect } from "react";
 import { 
   ShieldCheck, Pencil, Trash2, X, Check, Mail, User, 
-  MessageSquare, Send, Lock, Unlock, Power, Filter, Clock, AlertCircle, RefreshCw
+  MessageSquare, Send, Lock, Unlock, Power, Filter, Clock, AlertCircle, RefreshCw,
+  TrendingUp, BarChart3, Users, FileSpreadsheet, MousePointerClick
 } from "lucide-react";
 import { auth, db, handleFirestoreError, OperationType } from "../lib/firebase";
 import { 
@@ -32,13 +33,19 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<"reviews" | "tickets">("reviews");
+  const [activeSubTab, setActiveSubTab] = useState<"analytics" | "reviews" | "tickets">("analytics");
 
   // Dashboard Data states
   const [reviews, setReviews] = useState<Review[]>([]);
   const [tickets, setTickets] = useState<SupportMessage[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+
+  // Platform Analytics states
+  const [visits, setVisits] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [resumesList, setResumesList] = useState<any[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   // Filters
   const [ticketFilter, setTicketFilter] = useState<"all" | "pending" | "replied">("all");
@@ -81,6 +88,62 @@ export default function AdminPanel({
     setErrorToast(msg);
     setTimeout(() => setErrorToast(null), 5050);
   };
+
+  // Real-time listener for Platform Analytics (Visits, Users, Resumes count)
+  useEffect(() => {
+    if (!isAdminSession) return;
+    setAnalyticsLoading(true);
+
+    const matchVisitsUnsubscribe = onSnapshot(
+      collection(db, "visits"),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setVisits(list);
+      },
+      (err) => {
+        console.error("Access blocked listing visits analytics: ", err);
+      }
+    );
+
+    const matchUsersUnsubscribe = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setUsersList(list);
+      },
+      (err) => {
+        console.error("Access blocked listing users accounts: ", err);
+      }
+    );
+
+    const matchResumesUnsubscribe = onSnapshot(
+      collection(db, "resumes"),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setResumesList(list);
+        setAnalyticsLoading(false);
+      },
+      (err) => {
+        console.error("Access blocked listing resume stats: ", err);
+        setAnalyticsLoading(false);
+      }
+    );
+
+    return () => {
+      matchVisitsUnsubscribe();
+      matchUsersUnsubscribe();
+      matchResumesUnsubscribe();
+    };
+  }, [isAdminSession]);
 
   // Real-time listener for Reviews
   useEffect(() => {
@@ -442,6 +505,17 @@ export default function AdminPanel({
       <div className="border-b border-slate-200 pb-px flex items-center justify-between gap-4">
         <div className="flex gap-4">
           <button
+            onClick={() => setActiveSubTab("analytics")}
+            className={`pb-3 font-black text-xs uppercase tracking-wider font-mono border-b-2 transition cursor-pointer select-none ${
+              activeSubTab === "analytics" 
+                ? "border-indigo-600 text-indigo-600" 
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            📊 Analytics & Traffic
+          </button>
+
+          <button
             onClick={() => setActiveSubTab("reviews")}
             className={`pb-3 font-black text-xs uppercase tracking-wider font-mono border-b-2 transition cursor-pointer select-none ${
               activeSubTab === "reviews" 
@@ -464,6 +538,263 @@ export default function AdminPanel({
           </button>
         </div>
       </div>
+
+      {/* RENDER ACTIVE DETAILS SUB TAB */}
+      {activeSubTab === "analytics" && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Main Dashboard Stats Widget */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-3 relative overflow-hidden group hover:shadow-xs transition">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Total Page Visits</span>
+                <MousePointerClick className="w-4 h-4 text-blue-500" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-3xl font-black text-slate-900 leading-none">
+                  {analyticsLoading ? "..." : visits.length}
+                </span>
+                <p className="text-[10px] text-slate-400 font-medium">Total page visits logged by visitors</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-3 relative overflow-hidden group hover:shadow-xs transition">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-600" />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Unique Visitors</span>
+                <Users className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-3xl font-black text-slate-900 leading-none">
+                  {analyticsLoading ? "..." : new Set(visits.map(v => v.visitorId)).size}
+                </span>
+                <p className="text-[10px] text-slate-400 font-medium">Unique visitor browser sessions</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-3 relative overflow-hidden group hover:shadow-xs transition">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-600" />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Registered Users</span>
+                <User className="w-4 h-4 text-cyan-500" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-3xl font-black text-slate-900 leading-none">
+                  {analyticsLoading ? "..." : usersList.length}
+                </span>
+                <p className="text-[10px] text-slate-400 font-medium">Total customer accounts signed up</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-3 relative overflow-hidden group hover:shadow-xs transition">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-600" />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">CVs Built in App</span>
+                <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-3xl font-black text-slate-900 leading-none">
+                  {analyticsLoading ? "..." : resumesList.length}
+                </span>
+                <p className="text-[10px] text-slate-400 font-medium">Total resume documents synchronized</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Columns left and mid: Authenticator Sign-Ins details */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Authenticator breakdown visuals */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-6">
+                <div className="flex items-center justify-between border-b pb-4 border-slate-100">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black text-slate-950 tracking-tight flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4 text-indigo-600" /> SignUp Providers breakdown
+                    </h3>
+                    <p className="text-xs text-slate-405 font-medium">Comparison between Email & Google sign-in methodologies</p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9.5px] font-black uppercase rounded-lg font-mono">
+                    Realtime Feed
+                  </span>
+                </div>
+
+                {analyticsLoading ? (
+                  <div className="flex items-center justify-center py-12 text-slate-405 font-mono text-xs">
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2 text-indigo-300" /> Calculating variables...
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Progress details */}
+                    {(() => {
+                      const googleCount = usersList.filter(u => u.providerId === "google.com").length;
+                      const emailCount = usersList.filter(u => u.providerId === "password" || !u.providerId).length;
+                      const totalUsers = usersList.length || 1;
+                      const googlePct = Math.round((googleCount / totalUsers) * 100);
+                      const emailPct = Math.round((emailCount / totalUsers) * 100);
+
+                      return (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-1 text-center">
+                              <span className="text-[10px] text-slate-450 uppercase font-mono font-bold block">Google Login Count</span>
+                              <div className="flex items-baseline justify-center gap-1.5">
+                                <span className="text-xl font-bold text-slate-900">{googleCount}</span>
+                                <span className="text-xs text-blue-600 font-semibold">({googlePct}%)</span>
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-1 text-center">
+                              <span className="text-[10px] text-slate-450 uppercase font-mono font-bold block">Email Login Count</span>
+                              <div className="flex items-baseline justify-center gap-1.5">
+                                <span className="text-xl font-bold text-slate-900">{emailCount}</span>
+                                <span className="text-xs text-indigo-600 font-semibold">({emailPct}%)</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Progress bar ratio visualizer */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-[11px] font-mono font-black uppercase tracking-wider text-slate-500">
+                              <span>Google Login</span>
+                              <span>Email Login</span>
+                            </div>
+                            <div className="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200">
+                              <div 
+                                style={{ width: `${googlePct}%` }}
+                                className="bg-blue-500 h-full transition-all duration-500 flex items-center justify-center text-[9px] text-white font-bold"
+                              >
+                                {googlePct > 15 ? `${googlePct}%` : ""}
+                              </div>
+                              <div 
+                                style={{ width: `${emailPct}%` }}
+                                className="bg-indigo-600 h-full transition-all duration-500 flex items-center justify-center text-[9px] text-white font-bold"
+                              >
+                                {emailPct > 15 ? `${emailPct}%` : ""}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-slate-400 text-center font-medium font-sans">
+                              Active customer provider profile segments computed dynamically using active account registrations
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Customers listing info */}
+                    <div className="border-t border-slate-100 pt-5 space-y-4">
+                      <h4 className="text-xs font-black uppercase font-mono tracking-wider text-slate-550">
+                        Registered Customer Accounts ({usersList.length})
+                      </h4>
+                      <div className="max-h-72 overflow-y-auto border border-slate-150 rounded-xl divide-y divide-slate-100">
+                        {usersList.length === 0 ? (
+                          <p className="text-xs text-slate-405 font-mono text-center p-6">No user accounts found in database registry.</p>
+                        ) : (
+                          usersList.map((usr) => {
+                            const provider = usr.providerId || "password";
+                            return (
+                              <div key={usr.id} className="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50 transition">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-slate-105 flex items-center justify-center text-slate-650 font-mono font-black text-xs uppercase border border-slate-200">
+                                    {usr.fullName?.charAt(0) || "U"}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-slate-900">{usr.fullName || "Unresolved Customer"}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono">{usr.email}</p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right space-y-1 shrink-0">
+                                  <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-tight border ${
+                                    provider === "google.com" 
+                                      ? "bg-blue-50 text-blue-700 border-blue-150" 
+                                      : "bg-indigo-50 text-indigo-700 border-indigo-150"
+                                  }`}>
+                                    {provider === "google.com" ? "Google" : "Email"}
+                                  </span>
+                                  <p className="text-[9px] text-slate-405 font-mono">UID: {usr.uid?.substring(0, 10)}...</p>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right column: Visitor telemetry feeds */}
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-5">
+                <div className="space-y-1 border-b pb-4 border-slate-100">
+                  <h3 className="text-sm font-black text-slate-950 tracking-tight flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-blue-600 animate-spin-slow" /> Recent Site Traffic
+                  </h3>
+                  <p className="text-xs text-slate-405 font-semibold">Raw web traffic telemetry loads captured</p>
+                </div>
+
+                <div className="max-h-[500px] overflow-y-auto space-y-3.5">
+                  {analyticsLoading ? (
+                    <div className="flex items-center justify-center py-12 text-slate-405 font-mono text-xs">
+                      <RefreshCw className="w-5 h-5 animate-spin mr-2 text-blue-300" /> Syncing feeds...
+                    </div>
+                  ) : visits.length === 0 ? (
+                    <p className="text-xs text-slate-405 font-mono text-center py-6">No visitor telemetry found.</p>
+                  ) : (
+                    [...visits].sort((a, b) => {
+                      const aTime = a.createdAt?.seconds || 0;
+                      const bTime = b.createdAt?.seconds || 0;
+                      return bTime - aTime;
+                    }).map((vs) => {
+                      const visitDate = vs.createdAt?.toDate ? vs.createdAt.toDate() : (vs.createdAt ? new Date(vs.createdAt) : new Date(2026, 5, 5));
+                      const tsText = visitDate.toLocaleTimeString("en-US", {
+                        hour: "2-digit", minute: "2-digit"
+                      }) + " " + visitDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+                      const isRegistered = !!vs.userId;
+                      return (
+                        <div key={vs.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5 transition hover:shadow-3xs">
+                          <div className="flex justify-between items-center text-[10px] font-mono">
+                            <span className="text-slate-500 font-bold truncate max-w-[120px]">
+                              Ses: {vs.visitorId?.substring(0, 15)}...
+                            </span>
+                            <span className="text-slate-400 shrink-0 font-medium">{tsText}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px]">
+                            {isRegistered ? (
+                              <div className="flex items-center gap-1 truncate max-w-[160px]">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
+                                <span className="text-slate-800 font-bold tracking-tight truncate" title={vs.email}>
+                                  {vs.email}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 font-semibold italic flex items-center gap-1 shrink-0">
+                                <span className="w-1.5 h-1.5 bg-slate-350 rounded-full" /> Anonymous Guest
+                              </span>
+                            )}
+
+                            {isRegistered && (
+                              <span className={`px-1 rounded text-[8px] font-black uppercase shrink-0 ${
+                                vs.providerId === "google.com" 
+                                  ? "bg-blue-50 text-blue-650 border border-blue-100" 
+                                  : "bg-indigo-50 text-indigo-650 border border-indigo-100"
+                              }`}>
+                                {vs.providerId === "google.com" ? "G" : "E"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RENDER ACTIVE DETAILS SUB TAB */}
       {activeSubTab === "reviews" && (

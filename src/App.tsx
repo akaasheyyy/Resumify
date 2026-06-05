@@ -67,8 +67,44 @@ export default function App() {
         setAiStatus({ status: "missing_key", message: "AI engines are offline. Configure process.env.GEMINI_API_KEY in secrets." });
       });
 
+    // Record visitor page loads
+    const recordVisit = async (uid?: string, email?: string, provider?: string) => {
+      try {
+        const visitedInSession = sessionStorage.getItem("resumify_visited");
+        if (visitedInSession) return;
+        
+        sessionStorage.setItem("resumify_visited", "true");
+        
+        let visitorId = localStorage.getItem("resumify_visitor_id");
+        if (!visitorId) {
+          visitorId = `vis-${Math.random().toString(36).substring(2, 11)}-${Date.now()}`;
+          localStorage.setItem("resumify_visitor_id", visitorId);
+        }
+
+        const visitId = `visit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        await setDoc(doc(db, "visits", visitId), {
+          visitorId,
+          userId: uid || null,
+          email: email || null,
+          providerId: provider || null,
+          userAgent: navigator.userAgent,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.error("Failed to record visit:", err);
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      let resolvedUid = "";
+      let resolvedEmail = "";
+      let resolvedProvider = "";
+
       if (firebaseUser) {
+        resolvedUid = firebaseUser.uid;
+        resolvedEmail = firebaseUser.email || "";
+        resolvedProvider = firebaseUser.providerData?.[0]?.providerId || "password";
+
         const resolvedName = firebaseUser.displayName || "Authenticated User";
         const freshSession = {
           email: firebaseUser.email || "",
@@ -88,6 +124,9 @@ export default function App() {
         localStorage.removeItem("resumify_session");
       }
       setAuthLoading(false);
+      
+      // Let's log the visit
+      recordVisit(resolvedUid, resolvedEmail, resolvedProvider);
     });
 
     return () => unsubscribe();
