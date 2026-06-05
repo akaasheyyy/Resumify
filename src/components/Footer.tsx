@@ -71,10 +71,19 @@ export default function Footer({ onTabChange }: FooterProps) {
               <span className="text-[10px] text-slate-500">Full-Stack Architect</span>
             </div>
           </div>
-          <div className="flex gap-3 pt-3 border-t border-slate-800 text-slate-500">
-            <span className="text-[10px]">V1.0 MVP Launch</span>
-            <span>•</span>
-            <span className="text-[10px]">Copyright © 2026 Resumify</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800 text-slate-500">
+            <div className="flex gap-3">
+              <span className="text-[10px]">V1.0 MVP Launch</span>
+              <span>•</span>
+              <span className="text-[10px]">Copyright © 2026 Resumify</span>
+            </div>
+            <button
+              onClick={() => onTabChange("admin")}
+              className="text-[10px] font-bold text-slate-500 hover:text-indigo-400 font-mono flex items-center gap-1 transition cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Admin Portal</span>
+            </button>
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import AiBuilder from "./components/AiBuilder";
 import AuthModal from "./components/AuthModal";
 import LoginPage from "./components/LoginPage";
 import CustomerReviews from "./components/CustomerReviews";
+import AdminPanel from "./components/AdminPanel";
 import { DEFAULT_RESUME_DATA } from "./data";
 import { ResumeData, UserSession } from "./types";
 import { 
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, onSnapshot } from "firebase/firestore";
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("home");
@@ -38,6 +39,10 @@ export default function App() {
   const [syncError, setSyncError] = useState("");
   const [resumeCreatedAt, setResumeCreatedAt] = useState<any>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  // Administrator and Live Support States
+  const [isAdminSession, setIsAdminSession] = useState<boolean>(false);
+  const [userTickets, setUserTickets] = useState<any[]>([]);
 
 
   // AI Connection checks
@@ -87,6 +92,38 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+
+  // Real-time listener for customer's support replies
+  useEffect(() => {
+    if (!session.isLoggedIn || !auth.currentUser) {
+      setUserTickets([]);
+      return;
+    }
+    const q = query(
+      collection(db, "support_messages"),
+      where("userId", "==", auth.currentUser.uid)
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        // Client-side sort by createdAt date desc to avoid needing composite index creation
+        list.sort((a, b) => {
+          const aTime = a.createdAt?.seconds || 0;
+          const bTime = b.createdAt?.seconds || 0;
+          return bTime - aTime;
+        });
+        setUserTickets(list);
+      },
+      (err) => {
+        console.error("Failed to load customer tickets:", err);
+      }
+    );
+    return () => unsubscribe();
+  }, [session.isLoggedIn]);
 
   // Fetch Cloud resume data once upon login
   useEffect(() => {
@@ -272,19 +309,40 @@ export default function App() {
     }
   };
 
-  // Submitting Contact Us
-  const handleContactSubmit = (e: React.FormEvent) => {
+  // Submitting Contact Us to Firestore with real-time support
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactForm.name || !contactForm.email || !contactForm.message) {
       alert("Please fill in all blanks.");
       return;
     }
+
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      alert("Identity check: Please log in to dispatch messages to Team Resumify.");
+      return;
+    }
+
     setContactSubmitted(true);
-    setTimeout(() => {
-      setContactForm({ name: "", email: "", message: "" });
+    const ticketId = `ticket-${Date.now()}-${uid.substring(0, 5)}`;
+
+    try {
+      await setDoc(doc(db, "support_messages", ticketId), {
+        userId: uid,
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        message: contactForm.message.trim(),
+        createdAt: serverTimestamp()
+      });
+
+      setContactForm({ name: contactForm.name, email: contactForm.email, message: "" }); // Clean message, keep name and email
+      alert("Message registered! ANUNAND and AKASH have received your enquiry. Track status and team replies directly in your Support Tickets Inbox below.");
+    } catch (err: any) {
+      console.error("Support submission error:", err);
+      alert("Internal submission failure. Security credentials rejected.");
+    } finally {
       setContactSubmitted(false);
-      alert("Thank you! Your suggestion has been directed to ANUNAND P.R & AKASH SUNIL.");
-    }, 1500);
+    }
   };
 
   if (authLoading) {
@@ -609,7 +667,7 @@ export default function App() {
 
         {/* TAB 4: Customer Reviews and Ratings */}
         {currentTab === "reviews" && (
-          <CustomerReviews session={session} />
+          <CustomerReviews session={session} isAdminSession={isAdminSession} />
         )}
 
         {/* TAB 5: About Core Philosophy & Contact Support */}
@@ -699,6 +757,100 @@ export default function App() {
               </div>
             </div>
 
+            {/* Real-time personal Support Inbox Replies Section for customers */}
+            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-slate-100 space-y-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-105">
+                  <Mail className="w-4 h-4 text-blue-600 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-mono">Your Support Tickets & Team Replies Inbox</h3>
+                  <p className="text-[10px] text-slate-500 font-semibold leading-none mt-1">Enquiries submitted from your authenticated account are catalogued in real-time below.</p>
+                </div>
+              </div>
+
+              {userTickets.length === 0 ? (
+                <div className="text-center py-8 border border-dashed border-slate-205 rounded-xl">
+                  <p className="text-xs text-slate-400 font-semibold">No support query tickets registered yet for {session.email || "your account email"}.</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                  {userTickets.map((t) => {
+                    const tDate = t.createdAt?.toDate ? t.createdAt.toDate() : (t.createdAt ? new Date(t.createdAt) : new Date(2026, 5, 4));
+                    const formattedTicketDate = tDate.toLocaleDateString("en-US", {
+                      year: "numeric", month: "short", day: "numeric"
+                    });
+
+                    const rDate = t.repliedAt?.toDate ? t.repliedAt.toDate() : (t.repliedAt ? new Date(t.repliedAt) : null);
+                    const formattedRepliedDate = rDate 
+                      ? rDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+                      : "";
+
+                    return (
+                      <div key={t.id} className="p-4 bg-slate-50 border border-slate-150 rounded-xl space-y-3">
+                        <div className="flex justify-between items-start gap-3 flex-wrap">
+                          <div>
+                            <span className="text-[9.5px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold uppercase select-none">
+                              Ticket ID: {t.id}
+                            </span>
+                          </div>
+                          <div>
+                            {!t.reply ? (
+                              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 font-black text-[9px] uppercase tracking-wide rounded border border-amber-100 select-none">
+                                Awaiting Reply
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-black text-[9px] uppercase tracking-wide rounded border border-emerald-100 flex items-center gap-0.5 select-none animate-fadeIn">
+                                <Check className="w-2.5 h-2.5 animate-bounce" /> Response Available
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider font-mono">Your Query Message:</p>
+                          <p className="text-xs text-slate-850 font-semibold pl-1 whitespace-pre-wrap font-sans leading-relaxed">
+                            "{t.message}"
+                          </p>
+                          <p className="text-[9.5px] text-slate-400 font-mono tracking-tight pt-0.5 pl-1">Submitted at {formattedTicketDate}</p>
+                        </div>
+
+                        {t.reply && (
+                          <div className="bg-indigo-50/50 p-3.5 border border-indigo-150 rounded-lg space-y-1.5 animate-fadeIn">
+                            <div className="flex justify-between">
+                              <span className="text-[10px] text-indigo-900 font-black uppercase tracking-wider font-mono">
+                                💬 Response Reply from Team Resumify:
+                              </span>
+                              <span className="text-[9.5px] text-indigo-500 font-mono font-bold select-none">{formattedRepliedDate}</span>
+                            </div>
+                            <p className="text-xs text-indigo-950 font-semibold whitespace-pre-wrap font-sans leading-relaxed italic">
+                              "{t.reply}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 6: Admin Management Console */}
+        {currentTab === "admin" && (
+          <div className="animate-fadeIn py-4">
+            <AdminPanel 
+              session={session}
+              isAdminSession={isAdminSession}
+              onAdminLogin={() => setIsAdminSession(true)}
+              onAdminLogout={() => {
+                setIsAdminSession(false);
+                setCurrentTab("home");
+              }}
+              onNavigateToTab={(tab: string) => setCurrentTab(tab)}
+            />
           </div>
         )}
 

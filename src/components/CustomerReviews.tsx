@@ -11,9 +11,10 @@ import { UserSession, Review } from "../types";
 
 interface CustomerReviewsProps {
   session: UserSession;
+  isAdminSession?: boolean;
 }
 
-export default function CustomerReviews({ session }: CustomerReviewsProps) {
+export default function CustomerReviews({ session, isAdminSession = false }: CustomerReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number>(5);
@@ -75,6 +76,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
     setRating(rev.rating);
     setReviewText(rev.reviewText);
     setFullName(rev.fullName);
+    setEmail(rev.email);
     const container = document.getElementById("post-review-form-container");
     if (container) {
       container.scrollIntoView({ behavior: "smooth" });
@@ -87,6 +89,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
     setRating(5);
     setReviewText("");
     setFullName(session.fullName || "");
+    setEmail(session.email || "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,9 +124,9 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
     const reviewDocRef = doc(db, "reviews", reviewId);
 
     const payload = {
-      userId: uid,
+      userId: isEditing && editingReview ? editingReview.userId : uid,
       fullName: fullName.trim(),
-      email: email.trim(), // Rules safely prevent email spoofing targeting external addresses
+      email: isEditing && editingReview ? editingReview.email : email.trim(), // Rules safely prevent email spoofing targeting external addresses
       rating,
       reviewText: reviewText.trim(),
       createdAt: isEditing && editingReview ? editingReview.createdAt : serverTimestamp(),
@@ -153,8 +156,8 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
 
   const handleDelete = async (id: string, authorId: string) => {
     const uid = auth.currentUser?.uid;
-    if (!uid || uid !== authorId) {
-      setErrorToast("Security warning: You can only purge your own verified review!");
+    if (!uid || (uid !== authorId && !isAdminSession)) {
+      setErrorToast("Security warning: You can only purge your own verified review unless you are an Admin!");
       setTimeout(() => setErrorToast(null), 4000);
       return;
     }
@@ -458,6 +461,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
 
                 const letterSeed = encodeURIComponent(rev.fullName);
                 const isMyReview = rev.userId === auth.currentUser?.uid;
+                const canManageReview = isMyReview || isAdminSession;
 
                 return (
                   <div 
@@ -490,7 +494,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
                           </div>
                           {/* Hide strict full email content for standard public reviewers except domain profile for privacy compliance */}
                           <p className="text-[9.5px] text-slate-400 font-mono font-medium">
-                            {rev.email.replace(/(.{3})(.*)(?=@)/, "$1***")}
+                            {isAdminSession ? rev.email : rev.email.replace(/(.{3})(.*)(?=@)/, "$1***")}
                           </p>
                         </div>
                         <div className="text-left sm:text-right shrink-0">
@@ -506,7 +510,7 @@ export default function CustomerReviews({ session }: CustomerReviewsProps) {
                     </div>
 
                     {/* Action Triggers for review authors */}
-                    {isMyReview && (
+                    {canManageReview && (
                       <div className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto flex gap-1 sm:opacity-0 group-hover:opacity-100 transition">
                         <button
                           type="button"

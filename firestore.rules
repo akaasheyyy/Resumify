@@ -20,6 +20,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == "meakashsunilkk@gmail.com";
+    }
+
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -79,16 +83,28 @@ service cloud.firestore {
         && data.languages is list;
     }
 
-    function isValidReview(data) {
+    function isValidReview(data, isSystemAdmin) {
       return data.keys().hasAll(['userId', 'fullName', 'email', 'rating', 'reviewText'])
         && data.keys().size() <= 7
         && data.userId is string && data.userId.size() <= 128
-        && data.userId == request.auth.uid
+        && (isSystemAdmin || data.userId == request.auth.uid)
         && data.fullName is string && data.fullName.size() <= 200
         && data.email is string && data.email.size() <= 200
-        && data.email == request.auth.token.email
+        && (isSystemAdmin || data.email == request.auth.token.email)
         && (data.rating is int || data.rating is float) && data.rating >= 1 && data.rating <= 5
         && data.reviewText is string && data.reviewText.size() >= 2 && data.reviewText.size() <= 2000
+        && (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidSupportMessage(data) {
+      return data.keys().hasAll(['userId', 'name', 'email', 'message'])
+        && data.keys().size() <= 7
+        && data.userId is string && data.userId.size() <= 128
+        && data.name is string && data.name.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && data.message is string && data.message.size() >= 2 && data.message.size() <= 5000
+        && (!('reply' in data) || (data.reply is string && data.reply.size() <= 5000))
+        && (!('repliedAt' in data) || data.repliedAt is timestamp)
         && (!('createdAt' in data) || data.createdAt is timestamp);
     }
 
@@ -102,16 +118,39 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn()
         && isValidId(reviewId)
-        && isValidReview(incoming())
+        && isValidReview(incoming(), isAdmin())
         && incoming().createdAt == request.time;
       allow update: if isSignedIn()
         && isValidId(reviewId)
-        && isValidReview(incoming())
-        && existing().userId == request.auth.uid
-        && incoming().userId == request.auth.uid
+        && isValidReview(incoming(), isAdmin())
+        && (
+          (existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().email == existing().email)
+          ||
+          isAdmin()
+        )
         && incoming().createdAt == existing().createdAt;
       allow delete: if isSignedIn()
-        && existing().userId == request.auth.uid;
+        && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    match /support_messages/{messageId} {
+      allow create: if isSignedIn()
+        && isValidId(messageId)
+        && isValidSupportMessage(incoming())
+        && incoming().createdAt == request.time
+        && incoming().userId == request.auth.uid
+        && incoming().email == request.auth.token.email;
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn()
+        && isValidId(messageId)
+        && isValidSupportMessage(incoming())
+        && (
+          (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['reply', 'repliedAt']))
+          ||
+          (existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().email == existing().email && incoming().diff(existing()).affectedKeys().hasOnly(['message']))
+        );
+      allow delete: if isAdmin();
     }
 
     match /users/{userId} {

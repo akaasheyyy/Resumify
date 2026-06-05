@@ -88,6 +88,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "fullName", "email", "rating", "reviewText"]
+    },
+    "support_message": {
+      "title": "SupportMessage",
+      "description": "Customer Support Tickets/inquiries with replies from Admin team",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Sender User UID" },
+        "name": { "type": "string", "description": "Sender Name" },
+        "email": { "type": "string", "format": "email", "description": "Sender Email Address" },
+        "message": { "type": "string", "description": "Support query message content" },
+        "reply": { "type": "string", "description": "Admin response reply content" },
+        "repliedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "email", "message"]
     }
   },
   "firestore": {
@@ -102,6 +117,10 @@
     "/reviews/{reviewId}": {
       "schema": "review",
       "description": "Stores customer testimonials and ratings"
+    },
+    "/support_messages/{messageId}": {
+      "schema": "support_message",
+      "description": "Stores customer support messages and administrator replies"
     }
   }
 }
