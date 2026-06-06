@@ -5,7 +5,7 @@
 
 import React from "react";
 import { ResumeData } from "../types";
-import { Mail, Phone, MapPin, Linkedin, Globe, Award, BookOpen, Layers, Briefcase, Languages } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Globe, Award, BookOpen, Layers, Briefcase, Languages, Calendar } from "lucide-react";
 
 interface ResumePreviewProps {
   data: ResumeData;
@@ -142,6 +142,12 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
             <span className="flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" style={{ color: selectedColor }} />
               {personal.address}
+            </span>
+          )}
+          {personal.dob && (
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" style={{ color: selectedColor }} />
+              DOB: {personal.dob}
             </span>
           )}
           {personal.linkedin && (
@@ -349,6 +355,12 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
                 <span className="text-[11px] text-slate-300">{personal.address}</span>
               </div>
             )}
+            {personal.dob && (
+              <div className="flex gap-2">
+                <Calendar className="w-3.5 h-3.5 shrink-0" style={{ color: selectedColor }} />
+                <span className="text-[11px] text-slate-300">DOB: {personal.dob}</span>
+              </div>
+            )}
             {personal.linkedin && (
               <div className="flex gap-2">
                 <Linkedin className="w-3.5 h-3.5 shrink-0" style={{ color: selectedColor }} />
@@ -549,6 +561,11 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
               <MapPin className="w-3.5 h-3.5" style={{ color: selectedColor }} /> {personal.address}
             </span>
           )}
+          {personal.dob && (
+            <span className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" style={{ color: selectedColor }} /> DOB: {personal.dob}
+            </span>
+          )}
           {personal.linkedin && (
             <span className="flex items-center gap-2">
               <Linkedin className="w-3.5 h-3.5" style={{ color: selectedColor }} /> {personal.linkedin}
@@ -705,6 +722,9 @@ export default function ResumePreview({ data, printRef }: ResumePreviewProps) {
           )}
           {personal.address && (
             <span className="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full">{personal.address}</span>
+          )}
+          {personal.dob && (
+            <span className="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full">DOB: {personal.dob}</span>
           )}
           {personal.linkedin && (
             <span className="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full">{personal.linkedin}</span>

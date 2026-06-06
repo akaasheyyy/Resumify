@@ -576,6 +576,16 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
                   className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none"
                 />
               </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Date of Birth</label>
+                <input
+                  type="text"
+                  value={data.personal.dob || ""}
+                  onChange={(e) => updatePersonal("dob", e.target.value)}
+                  placeholder="e.g. October 15, 1995"
+                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none"
+                />
+              </div>
               <div className="col-span-2 space-y-1">
                 <label className="text-xs font-bold text-slate-700">Personal Website / Portfolio</label>
                 <input

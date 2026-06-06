@@ -7,6 +7,35 @@ import { ResumeData } from "./types";
 
 export const DEFAULT_RESUME_DATA: ResumeData = {
   personal: {
+    fullName: "",
+    jobTitle: "",
+    email: "",
+    phone: "",
+    address: "",
+    linkedin: "",
+    website: "",
+    summary: "",
+    dob: "",
+  },
+  education: [],
+  experience: [],
+  skills: [],
+  projects: [],
+  certifications: [],
+  languages: [],
+  selectedTemplate: "modern",
+  selectedColor: "#1e3a8a", // Deep Blue default
+  selectedFont: "Inter, sans-serif",
+  selectedDensity: "comfortable",
+  selectedLayoutVariation: "classic",
+  selectedBulletStyle: "disc",
+  selectedBorderAccent: "top-bar",
+  showAvatar: false,
+  selectedAvatarShape: "circle",
+};
+
+export const SAMPLE_RESUME_DATA: ResumeData = {
+  personal: {
     fullName: "Alex Rivera",
     jobTitle: "Senior Full Stack Engineer",
     email: "alex.rivera@example.com",
@@ -15,6 +44,7 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
     linkedin: "linkedin.com/in/alex-rivera-dev",
     website: "alexrivera.dev",
     summary: "Dynamic and impact-driven Full Stack Engineer with over 5 years of experience architecting cloud native web applications. Proven success leading distributed teams, reducing platform latencies by 35%, and maximizing engineering velocities utilizing modern React, TypeScript, and cloud services.",
+    dob: "November 14, 1993",
   },
   education: [
     {

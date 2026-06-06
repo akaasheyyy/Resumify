@@ -13,7 +13,7 @@ import AuthModal from "./components/AuthModal";
 import LoginPage from "./components/LoginPage";
 import CustomerReviews from "./components/CustomerReviews";
 import AdminPanel from "./components/AdminPanel";
-import { DEFAULT_RESUME_DATA } from "./data";
+import { DEFAULT_RESUME_DATA, SAMPLE_RESUME_DATA } from "./data";
 import { ResumeData, UserSession } from "./types";
 import { 
   Sparkles, FileText, Download, RotateCcw, AlertCircle, CheckCircle, 
@@ -338,7 +338,7 @@ export default function App() {
   // Reset core resume to original state
   const handleResetRestore = () => {
     if (window.confirm("Are you sure you want to restore the default sample resume data? This will overwrite your current progress.")) {
-      setResumeData(DEFAULT_RESUME_DATA);
+      setResumeData(SAMPLE_RESUME_DATA);
     }
   };
 
@@ -346,7 +346,7 @@ export default function App() {
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear your entire resume? This will wipe the fields.")) {
       setResumeData({
-        personal: { fullName: "", jobTitle: "", email: "", phone: "", address: "", linkedin: "", website: "", summary: "" },
+        personal: { fullName: "", jobTitle: "", email: "", phone: "", address: "", linkedin: "", website: "", summary: "", dob: "" },
         education: [],
         experience: [],
         skills: [],

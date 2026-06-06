@@ -13,6 +13,7 @@ export interface PersonalDetails {
   website: string;
   summary: string;
   photoUrl?: string;
+  dob?: string;
 }
 
 export interface Education {
