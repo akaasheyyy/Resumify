@@ -48,7 +48,7 @@ service cloud.firestore {
         && data.uid is string && data.uid.size() <= 128
         && data.fullName is string && data.fullName.size() <= 200
         && data.email is string && data.email.size() <= 200
-        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 10000))
+        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 1000000))
         && (!('providerId' in data) || (data.providerId is string && data.providerId.size() <= 100))
         && (!('createdAt' in data) || data.createdAt is timestamp)
         && (!('updatedAt' in data) || data.updatedAt is timestamp);
@@ -91,7 +91,7 @@ service cloud.firestore {
         && (!('linkedin' in data.personal) || (data.personal.linkedin is string && data.personal.linkedin.size() <= 500))
         && (!('website' in data.personal) || (data.personal.website is string && data.personal.website.size() <= 500))
         && (!('summary' in data.personal) || (data.personal.summary is string && data.personal.summary.size() <= 2000))
-        && (!('photoUrl' in data.personal) || (data.personal.photoUrl is string && data.personal.photoUrl.size() <= 200000))
+        && (!('photoUrl' in data.personal) || (data.personal.photoUrl is string && data.personal.photoUrl.size() <= 1000000))
         && data.education is list
         && data.experience is list
         && data.skills is list

@@ -23,6 +23,48 @@ import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, onSnapshot } from "firebase/firestore";
 
+// Helper utility to compress base64 image (data URL) to a lightweight JPEG (256x256 square headshot)
+export function compressBase64Image(base64Str: string): Promise<string> {
+  return new Promise((resolve) => {
+    // Return immediately if it's not a data URL or already within standard light limits (under 120KB)
+    if (!base64Str || !base64Str.startsWith("data:") || base64Str.length < 120000) {
+      resolve(base64Str);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(base64Str);
+          return;
+        }
+
+        // Determine matching dimensions to crop central square headshot
+        const size = Math.min(img.width, img.height);
+        const sourceX = (img.width - size) / 2;
+        const sourceY = (img.height - size) / 2;
+
+        const targetSize = 256;
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+
+        ctx.drawImage(img, sourceX, sourceY, size, size, 0, 0, targetSize, targetSize);
+        const compressed = canvas.toDataURL("image/jpeg", 0.85);
+        resolve(compressed);
+      } catch (e) {
+        resolve(base64Str);
+      }
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+    img.src = base64Str;
+  });
+}
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("home");
   const [resumeData, setResumeData] = useState<ResumeData>(DEFAULT_RESUME_DATA);
@@ -190,6 +232,22 @@ export default function App() {
       setSyncStatus("saving");
       const path = `resumes/${uid}`;
       try {
+        // Defensive Check: Ensure User Profile document exists in the `/users` collection to satisfy security rules check (existsCheck)
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          const resolvedName = auth.currentUser?.displayName || session.fullName || "Authenticated User";
+          await setDoc(userRef, {
+            uid: uid,
+            fullName: resolvedName,
+            email: auth.currentUser?.email || session.email || "",
+            photoUrl: auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(uid)}`,
+            providerId: auth.currentUser?.providerData?.[0]?.providerId || "password",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+
         const docRef = doc(db, "resumes", uid);
         const docSnap = await getDoc(docRef);
 
@@ -286,12 +344,34 @@ export default function App() {
 
     setSyncStatus("saving");
     const delayDebounceTimeout = setTimeout(async () => {
+      let activePersonal = { ...(resumeData.personal || { fullName: "" }) };
+      
+      // Auto-compress large base64 data photo urls on-the-fly to prevent hitting firestore limits
+      if (activePersonal.photoUrl && activePersonal.photoUrl.startsWith("data:") && activePersonal.photoUrl.length > 120000) {
+        try {
+          const compressed = await compressBase64Image(activePersonal.photoUrl);
+          if (compressed && compressed !== activePersonal.photoUrl) {
+            activePersonal.photoUrl = compressed;
+            // Update the React state so visual render is aligned and lightened
+            setResumeData(prev => ({
+              ...prev,
+              personal: {
+                ...prev.personal,
+                photoUrl: compressed
+              }
+            }));
+          }
+        } catch (compErr) {
+          console.error("Autosave automatic photo compression anomaly:", compErr);
+        }
+      }
+
       const path = `resumes/${uid}`;
       try {
         const docRef = doc(db, "resumes", uid);
         await setDoc(docRef, {
           userId: uid,
-          personal: resumeData.personal || { fullName: "" },
+          personal: activePersonal,
           education: resumeData.education || [],
           experience: resumeData.experience || [],
           skills: resumeData.skills || [],
