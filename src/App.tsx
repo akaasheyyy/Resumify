@@ -94,6 +94,30 @@ export default function App() {
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
+  // Dark Mode Engine and Storage synchronizer
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("resumify_dark_mode");
+      return saved ? JSON.parse(saved) : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("resumify_dark_mode", JSON.stringify(isDarkMode));
+    } catch (e) {}
+    
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -539,6 +563,8 @@ export default function App() {
         session={session} 
         onOpenAuth={() => setAuthIsOpen(true)}
         onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

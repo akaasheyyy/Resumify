@@ -3,8 +3,131 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+    @apply bg-slate-50 text-slate-800 antialiased transition-colors duration-250;
   }
+}
+
+/* --- High Fidelity Dark Theme Blueprint (Excluding PDF canvas printable) --- */
+.dark {
+  background-color: #0c111d !important; 
+}
+
+/* Base Body color transition mapping */
+.dark body {
+  background-color: #0c111d !important;
+  color: #f3f4f6 !important;
+}
+
+/* Ensure navbar transitions to deep dark slate glass */
+.dark header {
+  background-color: rgba(17, 24, 39, 0.9) !important;
+  border-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+/* Target all white card structures outside the resume preview */
+.dark .bg-white:not(#printable-cv):not(#printable-cv *) {
+  background-color: #111827 !important; 
+  color: #f3f4f6 !important;
+  border-color: #1f2937 !important;
+}
+
+/* Support and admin panels, general grey areas transition */
+.dark .bg-slate-50:not(#printable-cv):not(#printable-cv *),
+.dark .bg-slate-100:not(#printable-cv):not(#printable-cv *),
+.dark .bg-slate-200:not(#printable-cv):not(#printable-cv *) {
+  background-color: #111827 !important; 
+}
+
+.dark .bg-slate-250:not(#printable-cv):not(#printable-cv *) {
+  background-color: #1e293b !important;
+}
+
+/* Fix text colors globally outside the resume canvas in dark mode */
+.dark .text-slate-900:not(#printable-cv *),
+.dark .text-slate-800:not(#printable-cv *),
+.dark .text-slate-700:not(#printable-cv *) {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-slate-600:not(#printable-cv *),
+.dark .text-slate-500:not(#printable-cv *) {
+  color: #9ca3af !important;
+}
+
+/* Make custom select boxes, input fields, and options look incredibly polished */
+.dark input:not([type="checkbox"]):not(#printable-cv *),
+.dark textarea:not(#printable-cv *),
+.dark select:not(#printable-cv *) {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Buttons formatting under dark mode */
+.dark .bg-white:hover:not(#printable-cv *) {
+  background-color: #1e293b !important;
+}
+
+/* Specific elements like border and divider accent coloring */
+.dark .border-slate-100:not(#printable-cv *),
+.dark .border-slate-150:not(#printable-cv *),
+.dark .border-slate-200:not(#printable-cv *) {
+  border-color: #1f2937 !important;
+}
+
+/* Specific lists or list text components */
+.dark .divide-slate-100 > *:not(#printable-cv *),
+.dark .divide-slate-200 > *:not(#printable-cv *) {
+  border-color: #1f2937 !important;
+}
+
+/* Active navigation highlighted states */
+.dark header button.bg-slate-100, .dark header nav button.bg-slate-100 {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.dark header button:hover:not(.bg-blue-700), .dark header nav button:hover {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+/* Success panels/tickets lists and headers in support */
+.dark .bg-emerald-50:not(#printable-cv *) {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #a7f3d0 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.dark .text-emerald-800:not(#printable-cv *) {
+  color: #34d399 !important;
+}
+
+/* Amber alert boxes of Smart Fallback and status systems */
+.dark .bg-amber-50:not(#printable-cv *),
+.dark .bg-yellow-50:not(#printable-cv *) {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #fde68a !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+.dark .text-amber-800:not(#printable-cv *),
+.dark .text-yellow-800:not(#printable-cv *) {
+  color: #fbbf24 !important;
+}
+
+/* Star ratings colors, metadata lines, and scrollbars */
+.dark .text-slate-300:not(#printable-cv *) {
+  color: #4b5563 !important;
+}
+
+.dark .divide-y > * {
+  border-color: #1f2937 !important;
 }
 
 /* Print Overrides for Spotless & Professional PDF Exports */

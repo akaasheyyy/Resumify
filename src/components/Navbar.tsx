@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User, Star } from "lucide-react";
+import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User, Star, Sun, Moon } from "lucide-react";
 import { UserSession } from "../types";
 
 interface NavbarProps {
@@ -13,9 +13,19 @@ interface NavbarProps {
   session: UserSession;
   onOpenAuth: () => void;
   onLogout: () => void;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
-export default function Navbar({ currentTab, onTabChange, session, onOpenAuth, onLogout }: NavbarProps) {
+export default function Navbar({ 
+  currentTab, 
+  onTabChange, 
+  session, 
+  onOpenAuth, 
+  onLogout,
+  isDarkMode,
+  onToggleDarkMode
+}: NavbarProps) {
   return (
     <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100 shadow-3xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -66,6 +76,19 @@ export default function Navbar({ currentTab, onTabChange, session, onOpenAuth, o
 
         {/* Auth status or login button */}
         <div className="flex items-center gap-3">
+          {/* Dark Mode toggle switch */}
+          <button
+            onClick={onToggleDarkMode}
+            className="p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition focus:outline-none"
+            title={isDarkMode ? "Switch to Light theme" : "Switch to Dark theme"}
+          >
+            {isDarkMode ? (
+              <Sun className="w-4.5 h-4.5 text-amber-500 hover:text-amber-600" />
+            ) : (
+              <Moon className="w-4.5 h-4.5 text-slate-500 hover:text-slate-700" />
+            )}
+          </button>
+
           {session.isLoggedIn ? (
             <div className="flex items-center gap-2.5 pl-3 border-l border-slate-100">
               <div className="text-right hidden sm:block">
