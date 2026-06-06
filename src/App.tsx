@@ -20,7 +20,6 @@ import {
   ArrowRight, Shield, Layers, HelpCircle, User, Mail, Send, Check 
 } from "lucide-react";
 import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
-import firebaseConfig from "../firebase-applet-config.json";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, onSnapshot } from "firebase/firestore";
 
@@ -70,7 +69,6 @@ export default function App() {
 
     // Record visitor page loads
     const recordVisit = async (uid?: string, email?: string, provider?: string) => {
-      let visitId = "";
       try {
         const visitedInSession = sessionStorage.getItem("resumify_visited");
         if (visitedInSession) return;
@@ -83,7 +81,7 @@ export default function App() {
           localStorage.setItem("resumify_visitor_id", visitorId);
         }
 
-        visitId = `visit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const visitId = `visit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         await setDoc(doc(db, "visits", visitId), {
           visitorId,
           userId: uid || null,
@@ -94,9 +92,6 @@ export default function App() {
         });
       } catch (err) {
         console.error("Failed to record visit:", err);
-        try {
-          handleFirestoreError(err, OperationType.WRITE, `visits/${visitId}`);
-        } catch (_) {}
       }
     };
 
@@ -164,9 +159,6 @@ export default function App() {
       },
       (err) => {
         console.error("Failed to load customer tickets:", err);
-        try {
-          handleFirestoreError(err, OperationType.LIST, "support_messages");
-        } catch (_) {}
       }
     );
     return () => unsubscribe();
@@ -246,20 +238,12 @@ export default function App() {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
-          const newDocSnap = await getDoc(docRef);
-          if (newDocSnap.exists()) {
-            const newCloudData = newDocSnap.data() as any;
-            setResumeCreatedAt(newCloudData.createdAt || null);
-          }
           setSyncStatus("saved");
         }
       } catch (err: any) {
         console.error("Cloud Resume Loading failed:", err);
         setSyncStatus("error");
         setSyncError(err.message || String(err));
-        try {
-          handleFirestoreError(err, OperationType.GET, path);
-        } catch (_) {}
       } finally {
         setIsInitialLoad(false);
       }
@@ -305,9 +289,6 @@ export default function App() {
         console.error("Cloud Resume Autosave failed:", err);
         setSyncStatus("error");
         setSyncError(err.message || String(err));
-        try {
-          handleFirestoreError(err, OperationType.WRITE, path);
-        } catch (_) {}
       }
     }, 1500);
 
@@ -409,9 +390,6 @@ export default function App() {
     } catch (err: any) {
       console.error("Support submission error:", err);
       alert("Internal submission failure. Security credentials rejected.");
-      try {
-        handleFirestoreError(err, OperationType.WRITE, `support_messages/${ticketId}`);
-      } catch (_) {}
     } finally {
       setContactSubmitted(false);
     }
@@ -646,11 +624,11 @@ export default function App() {
                         <span>Cloud Database Offline – Setup Action Required</span>
                       </div>
                       <p className="text-[11px] text-slate-600 font-medium">
-                        The application is unable to reach the Google Firestore backend on project <strong className="text-slate-800">{(firebaseConfig as any).projectId || "your-firebase-project"}</strong>. Please complete the following configuration steps in your Firebase Console to enable syncing:
+                        The application is unable to reach the Google Firestore backend on project <strong className="text-slate-800">resumify-b4675</strong>. Please complete the following configuration steps in your Firebase Console to enable syncing:
                       </p>
                       <ul className="list-disc pl-5 text-[10.5px] space-y-1.5 text-slate-600 font-medium">
                         <li>
-                          <strong>Create Firestore Database:</strong> Open the <a href={`https://console.firebase.google.com/project/${(firebaseConfig as any).projectId || "your-firebase-project"}/firestore`} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-800 underline font-bold inline-flex items-center gap-0.5">Firebase Console for {(firebaseConfig as any).projectId || "your-firebase-project"} <span className="text-[8px]">↗</span></a>, navigate to <strong>Firestore Database</strong>, and click <strong>Create Database</strong>. Ensure you pick standard/default configurations.
+                          <strong>Create Firestore Database:</strong> Open the <a href="https://console.firebase.google.com/project/resumify-b4675/firestore" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-800 underline font-bold inline-flex items-center gap-0.5">Firebase Console for resumify-b4675 <span className="text-[8px]">↗</span></a>, navigate to <strong>Firestore Database</strong>, and click <strong>Create Database</strong>. Ensure you pick standard/default configurations.
                         </li>
                         <li>
                           <strong>Verify Firestore Security Rules:</strong> Confirm that your custom Security Rules permit writes. In the Rules tab, you can set permission rules or deploy the provided <code>firestore.rules</code> file.

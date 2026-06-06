@@ -23,8 +23,9 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() 
         && (
-          (request.auth.token.keys().contains('email') && request.auth.token.email.lower() == "meakashsunilkk@gmail.com")
+          request.auth.token.email == "meakashsunilkk@gmail.com"
           || request.auth.uid == "Z0U3g177TzY9oIn6f995uB06eG72"
+          || (request.auth.token.keys().contains('email') && request.auth.token.email.matches('(?i)meakashsunilkk@gmail\\.com'))
         );
     }
 
@@ -156,7 +157,7 @@ service cloud.firestore {
         && incoming().createdAt == request.time
         && incoming().userId == request.auth.uid
         && incoming().email == request.auth.token.email;
-      allow get: if isSignedIn() && (resource == null || existing().userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
       allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow update: if isSignedIn()
         && isValidId(messageId)
@@ -186,21 +187,22 @@ service cloud.firestore {
     }
 
     match /resumes/{resumeId} {
-      allow get: if isSignedIn() && (resumeId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
       allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn()
-        && resumeId == request.auth.uid
         && isValidId(resumeId)
         && isValidResume(incoming())
-        && incoming().createdAt == request.time;
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
       allow update: if isSignedIn()
-        && resumeId == request.auth.uid
         && isValidId(resumeId)
         && isValidResume(incoming())
-        && (!('createdAt' in incoming()) || !('createdAt' in existing()) || incoming().createdAt == existing().createdAt || incoming().createdAt == request.time)
+        && existing().userId == request.auth.uid
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time;
       allow delete: if isSignedIn()
-        && (resumeId == request.auth.uid || isAdmin());
+        && existing().userId == request.auth.uid;
     }
 
     match /visits/{visitId} {
