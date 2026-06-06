@@ -154,23 +154,63 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
       return;
     }
 
-    // Direct check for size to prevent Firestore payload sync failures (> 900KB)
-    if (file.size > 921600) {
-      setErrorToast(`File is too large (${Math.round(file.size / 1024)}KB). To guarantee flawless database sync, please import a photo under 900KB or reference a web link.`);
-      setTimeout(() => setErrorToast(null), 6000);
-      return;
-    }
-
     setCompressingPhoto(true);
     const reader = new FileReader();
     reader.onload = (event) => {
       const originalDataUrl = event.target?.result as string;
       
-      // Store the literal, raw base64 data URL exactly as it is, fully preserving original format, transparency, resolution, and quality.
-      updatePersonal("photoUrl", originalDataUrl);
-      setSuccessToast("Photo processed and preserved at 100% original quality!");
-      setTimeout(() => setSuccessToast(null), 4000);
-      setCompressingPhoto(false);
+      // Load image into an Image element for canvas processing
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            // Context not available, fallback to the original image
+            updatePersonal("photoUrl", originalDataUrl);
+            setSuccessToast("Photo processed (fallback to original quality)!");
+            setTimeout(() => setSuccessToast(null), 4000);
+            setCompressingPhoto(false);
+            return;
+          }
+
+          // Crop to a square headshot from the center
+          const size = Math.min(img.width, img.height);
+          const sourceX = (img.width - size) / 2;
+          const sourceY = (img.height - size) / 2;
+          
+          // Target 256x256 pixels: super crisp visual rendering at 2-3x DPI but incredibly tiny file size (usually 10-25KB)
+          const targetSize = 256;
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          
+          ctx.drawImage(img, sourceX, sourceY, size, size, 0, 0, targetSize, targetSize);
+          
+          // Export as compressed highly compatible JPEG
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          const approxKb = Math.round((compressedDataUrl.length * 0.75) / 1024);
+          
+          updatePersonal("photoUrl", compressedDataUrl);
+          setSuccessToast(`Photo optimized successfully for sync (${approxKb}KB)!`);
+          setTimeout(() => setSuccessToast(null), 4000);
+          setCompressingPhoto(false);
+        } catch (err) {
+          // If canvas processing fails, fallback to original representation safely
+          updatePersonal("photoUrl", originalDataUrl);
+          setSuccessToast("Photo processed (fallback to original)!");
+          setTimeout(() => setSuccessToast(null), 4000);
+          setCompressingPhoto(false);
+        }
+      };
+      
+      img.onerror = () => {
+        updatePersonal("photoUrl", originalDataUrl);
+        setSuccessToast("Photo processed (fallback to raw)!");
+        setTimeout(() => setSuccessToast(null), 4000);
+        setCompressingPhoto(false);
+      };
+
+      img.src = originalDataUrl;
     };
 
     reader.onerror = () => {
