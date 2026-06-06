@@ -181,8 +181,8 @@ service cloud.firestore {
     }
 
     match /resumes/{resumeId} {
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid);
       allow create: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())

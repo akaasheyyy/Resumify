@@ -45,6 +45,7 @@ export default function AdminPanel({
   const [visits, setVisits] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [resumesList, setResumesList] = useState<any[]>([]);
+  const [resumesAccessPrivated, setResumesAccessPrivated] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   // Filters
@@ -130,10 +131,12 @@ export default function AdminPanel({
           list.push({ id: doc.id, ...doc.data() });
         });
         setResumesList(list);
+        setResumesAccessPrivated(false);
         setAnalyticsLoading(false);
       },
       (err) => {
-        console.error("Access blocked listing resume stats: ", err);
+        console.warn("Access to raw customer resumes is strictly isolated for client privacy:", err.message);
+        setResumesAccessPrivated(true);
         setAnalyticsLoading(false);
       }
     );
@@ -587,16 +590,34 @@ export default function AdminPanel({
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-2xs space-y-3 relative overflow-hidden group hover:shadow-xs transition">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-600" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-teal-600" />
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">CVs Built in App</span>
-                <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                <span className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">CVs Built & Drafts</span>
+                <Lock className="w-4 h-4 text-teal-600" />
               </div>
               <div className="space-y-1">
-                <span className="text-3xl font-black text-slate-900 leading-none">
-                  {analyticsLoading ? "..." : resumesList.length}
-                </span>
-                <p className="text-[10px] text-slate-400 font-medium">Total resume documents synchronized</p>
+                {analyticsLoading ? (
+                  <span className="text-3xl font-black text-slate-900 leading-none">...</span>
+                ) : resumesAccessPrivated ? (
+                  <div className="flex flex-col">
+                    <span className="text-lg font-black text-teal-700 tracking-tight flex items-center gap-1">
+                      Client Private
+                    </span>
+                    <span className="px-1.5 py-0.5 mt-1 self-start bg-teal-50 border border-teal-100 text-teal-700 text-[8.5px] font-bold uppercase rounded font-mono">
+                      Isolated Enforced
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-3xl font-black text-slate-900 leading-none">
+                    {resumesList.length}
+                  </span>
+                )}
+                <p className="text-[10px] text-slate-400 font-medium mt-1">
+                  {resumesAccessPrivated 
+                    ? "Subsystem prevents Admin overview of customer drafts" 
+                    : "Total resume documents synchronized"
+                  }
+                </p>
               </div>
             </div>
           </div>
