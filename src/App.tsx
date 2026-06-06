@@ -1178,7 +1178,7 @@ export default function App() {
                   </p>
                   <div className="space-y-2 text-xs pt-4 border-t border-slate-800 text-slate-400 font-medium">
                     <p className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-blue-500" /> support@resumify-builder.com
+                      <Mail className="w-4 h-4 text-blue-500" /> 2acreationsstudio@gmail.com
                     </p>
                     <p className="flex items-center gap-2">
                       <User className="w-4 h-4 text-blue-500" /> Headquartered at Google Cloud Cloud Run
