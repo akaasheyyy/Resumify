@@ -26,6 +26,10 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, 
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (aiStatus.status === "coming_soon") {
+      setError("Complete AI CV generation is coming soon! Our engineers are setting up high-performance Gemini LLMs.");
+      return;
+    }
     setError("");
     setGenerating(true);
     setSuccess(false);
@@ -208,7 +212,7 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, 
 
           <button
             type="submit"
-            disabled={generating}
+            disabled={generating || aiStatus.status === "coming_soon"}
             className="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg text-xs transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
           >
             {generating ? (
@@ -219,10 +223,24 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, 
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                {aiStatus.status === "missing_key" ? "Auto-Generate Full CV (Demo Engine)" : "Auto-Generate Full CV with AI"}
+                {aiStatus.status === "coming_soon" 
+                  ? "AI CV Generation (Coming Soon)" 
+                  : aiStatus.status === "missing_key" 
+                    ? "Auto-Generate Full CV (Demo Engine)" 
+                    : "Auto-Generate Full CV with AI"}
               </>
             )}
           </button>
+
+          {aiStatus.status === "coming_soon" && (
+            <div className="p-3 bg-sky-50 border border-sky-200 rounded-lg flex items-start gap-2 text-[10px] text-sky-850 leading-relaxed shadow-3xs">
+              <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5 text-sky-600 animate-pulse" />
+              <div>
+                <span className="font-bold block text-sky-900">AI Architect Launching Soon</span>
+                We are currently integrating live high-performance Gemini AI models. Complete automatic synthesis & AI polishing will launch here soon!
+              </div>
+            </div>
+          )}
 
           {aiStatus.status === "missing_key" && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-[10px] text-amber-800 leading-relaxed">

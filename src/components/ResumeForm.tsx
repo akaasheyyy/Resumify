@@ -376,6 +376,10 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
   // AI Integration: In-line ATS Enhancement via Server SDK proxy
   const handleAIEnhanceSummary = async () => {
     if (enhancingField) return;
+    if (aiStatus.status === "coming_soon") {
+      setErrorToast("Gemini AI features are coming soon! Stay tuned as we finalize the live model integration.");
+      return;
+    }
     setEnhancingField("summary");
     setErrorToast(null);
     setSuccessToast(null);
@@ -411,6 +415,10 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
 
   const handleAIEnhanceExperience = async (id: string, jobTitle: string, companyName: string, raw: string) => {
     if (enhancingField || !raw?.trim()) return;
+    if (aiStatus.status === "coming_soon") {
+      setErrorToast("Gemini AI features are coming soon! Stay tuned as we finalize the live model integration.");
+      return;
+    }
     setEnhancingField(`exp-${id}`);
     setErrorToast(null);
     setSuccessToast(null);
@@ -441,6 +449,10 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
 
   const handleAIEnhanceProject = async (id: string, projectName: string, tech: string, desc: string) => {
     if (enhancingField || !desc?.trim()) return;
+    if (aiStatus.status === "coming_soon") {
+      setErrorToast("Gemini AI features are coming soon! Stay tuned as we finalize the live model integration.");
+      return;
+    }
     setEnhancingField(`proj-${id}`);
     setErrorToast(null);
     setSuccessToast(null);
@@ -463,7 +475,7 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
       }
     } catch (err) {
       console.error(err);
-      setErrorToast("Error generating technical project description.");
+      setErrorToast("Error enhancing project description.");
     } finally {
       setEnhancingField(null);
     }
@@ -540,7 +552,20 @@ export default function ResumeForm({ data, onChange, aiStatus }: ResumeFormProps
           </div>
         )}
 
-        {/* API Warning if server has no key configured */}
+        {/* API Warning or Coming Soon Banner */}
+        {aiStatus.status === "coming_soon" && (
+          <div className="mb-6 p-4 bg-sky-50 border border-sky-200 rounded-lg flex items-start gap-3 text-xs text-sky-900 leading-relaxed shadow-xs">
+            <Sparkles className="w-5 h-5 shrink-0 text-sky-600 animate-pulse mt-0.5" />
+            <div>
+              <p className="font-bold flex items-center gap-1.5 text-sky-950">
+                AI Resume Features Coming Soon!
+                <span className="px-1.5 py-0.5 bg-sky-100 text-sky-850 text-[9px] font-black uppercase tracking-wider rounded font-mono">Roadmap Active</span>
+              </p>
+              <p>{aiStatus.message}</p>
+            </div>
+          </div>
+        )}
+
         {aiStatus.status === "missing_key" && (
           <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2.5 text-xs text-amber-800 leading-relaxed shadow-3xs">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />

@@ -57,11 +57,11 @@ function getGeminiClient(): GoogleGenAI {
   return geminiClient;
 }
 
-// Check if Gemini API is available and initialized - Unlocked for all customers
+// Check if Gemini API is available and initialized - Set to Coming Soon mode
 app.get("/api/ai/status", (req, res) => {
   res.json({
-    status: "configured",
-    message: "AI systems are online and active for all customers. Complete smart optimization is fully enabled."
+    status: "coming_soon",
+    message: "Resumify high-performance Gemini AI integration is coming soon! Stay tuned for instant resume polishing, deep automated achievements drafting, and full CV generation."
   });
 });
 

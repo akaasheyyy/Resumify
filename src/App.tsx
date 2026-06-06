@@ -130,7 +130,7 @@ export default function App() {
       })
       .catch((err) => {
         console.error(err);
-        setAiStatus({ status: "configured", message: "AI engines are online and active. Smart local optimization is fully enabled." });
+        setAiStatus({ status: "coming_soon", message: "Resumify high-performance Gemini AI integration is coming soon! Stay tuned for instant resume polishing, deep automated achievements drafting, and full CV generation." });
       });
 
     // Record visitor page loads
