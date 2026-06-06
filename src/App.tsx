@@ -196,47 +196,73 @@ export default function App() {
         if (docSnap.exists()) {
           const cloudData = docSnap.data() as any;
           setResumeCreatedAt(cloudData.createdAt || null);
-          setResumeData({
-            personal: cloudData.personal || { fullName: "" },
-            education: cloudData.education || [],
-            experience: cloudData.experience || [],
-            skills: cloudData.skills || [],
-            projects: cloudData.projects || [],
-            certifications: cloudData.certifications || [],
-            languages: cloudData.languages || [],
-            selectedTemplate: cloudData.selectedTemplate || "modern",
-            selectedColor: cloudData.selectedColor || "#1e3a8a",
-            selectedFont: cloudData.selectedFont,
-            selectedDensity: cloudData.selectedDensity,
-            selectedLayoutVariation: cloudData.selectedLayoutVariation,
-            selectedBulletStyle: cloudData.selectedBulletStyle,
-            selectedBorderAccent: cloudData.selectedBorderAccent,
-            showAvatar: cloudData.showAvatar,
-            selectedAvatarShape: cloudData.selectedAvatarShape,
-          });
+          
+          // Detect if the loaded data is the old Alex Rivera default sample draft
+          const isSample = cloudData.personal?.fullName === "Alex Rivera" || cloudData.personal?.email === "alex.rivera@example.com";
+          
+          if (isSample) {
+            // Load clean, personalized blank data with active user session details
+            const cleanPersonal = {
+              ...DEFAULT_RESUME_DATA.personal,
+              fullName: auth.currentUser?.displayName || session.fullName || "",
+              email: auth.currentUser?.email || session.email || "",
+            };
+            setResumeData({
+              ...DEFAULT_RESUME_DATA,
+              personal: cleanPersonal,
+            });
+          } else {
+            setResumeData({
+              personal: cloudData.personal || { fullName: "" },
+              education: cloudData.education || [],
+              experience: cloudData.experience || [],
+              skills: cloudData.skills || [],
+              projects: cloudData.projects || [],
+              certifications: cloudData.certifications || [],
+              languages: cloudData.languages || [],
+              selectedTemplate: cloudData.selectedTemplate || "modern",
+              selectedColor: cloudData.selectedColor || "#1e3a8a",
+              selectedFont: cloudData.selectedFont,
+              selectedDensity: cloudData.selectedDensity,
+              selectedLayoutVariation: cloudData.selectedLayoutVariation,
+              selectedBulletStyle: cloudData.selectedBulletStyle,
+              selectedBorderAccent: cloudData.selectedBorderAccent,
+              showAvatar: cloudData.showAvatar,
+              selectedAvatarShape: cloudData.selectedAvatarShape,
+            });
+          }
           setSyncStatus("saved");
         } else {
-          // Document does not exist yet; prime it with current data state
+          // Document does not exist yet; prime it with current data state personalized with active user details
+          const initialPersonal = {
+            ...DEFAULT_RESUME_DATA.personal,
+            fullName: auth.currentUser?.displayName || session.fullName || "",
+            email: auth.currentUser?.email || session.email || "",
+          };
           await setDoc(docRef, {
             userId: uid,
-            personal: resumeData.personal || { fullName: "" },
-            education: resumeData.education || [],
-            experience: resumeData.experience || [],
-            skills: resumeData.skills || [],
-            projects: resumeData.projects || [],
-            certifications: resumeData.certifications || [],
-            languages: resumeData.languages || [],
-            selectedTemplate: resumeData.selectedTemplate || "modern",
-            selectedColor: resumeData.selectedColor || "#1e3a8a",
-            selectedFont: resumeData.selectedFont || "",
-            selectedDensity: resumeData.selectedDensity || "comfortable",
-            selectedLayoutVariation: resumeData.selectedLayoutVariation || "classic",
-            selectedBulletStyle: resumeData.selectedBulletStyle || "disc",
-            selectedBorderAccent: resumeData.selectedBorderAccent || "none",
-            showAvatar: resumeData.showAvatar !== undefined ? resumeData.showAvatar : false,
-            selectedAvatarShape: resumeData.selectedAvatarShape || "circle",
+            personal: initialPersonal,
+            education: [],
+            experience: [],
+            skills: [],
+            projects: [],
+            certifications: [],
+            languages: [],
+            selectedTemplate: "modern",
+            selectedColor: "#1e3a8a",
+            selectedFont: "Inter, sans-serif",
+            selectedDensity: "comfortable",
+            selectedLayoutVariation: "classic",
+            selectedBulletStyle: "disc",
+            selectedBorderAccent: "top-bar",
+            showAvatar: false,
+            selectedAvatarShape: "circle",
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
+          });
+          setResumeData({
+            ...DEFAULT_RESUME_DATA,
+            personal: initialPersonal
           });
           setSyncStatus("saved");
         }
@@ -346,7 +372,17 @@ export default function App() {
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear your entire resume? This will wipe the fields.")) {
       setResumeData({
-        personal: { fullName: "", jobTitle: "", email: "", phone: "", address: "", linkedin: "", website: "", summary: "", dob: "" },
+        personal: { 
+          fullName: session.fullName || "", 
+          jobTitle: "", 
+          email: session.email || "", 
+          phone: "", 
+          address: "", 
+          linkedin: "", 
+          website: "", 
+          summary: "", 
+          dob: "" 
+        },
         education: [],
         experience: [],
         skills: [],
@@ -355,6 +391,13 @@ export default function App() {
         languages: [],
         selectedTemplate: "modern",
         selectedColor: "#1e3a8a",
+        selectedFont: "Inter, sans-serif",
+        selectedDensity: "comfortable",
+        selectedLayoutVariation: "classic",
+        selectedBulletStyle: "disc",
+        selectedBorderAccent: "top-bar",
+        showAvatar: false,
+        selectedAvatarShape: "circle",
       });
     }
   };
@@ -711,6 +754,7 @@ export default function App() {
               onGenerated={handleDataParsed} 
               onNavigateToBuilder={() => setCurrentTab("builder")}
               aiStatus={aiStatus}
+              session={session}
             />
           </div>
         )}

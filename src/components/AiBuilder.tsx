@@ -4,16 +4,17 @@
  */
 
 import React, { useState } from "react";
-import { ResumeData } from "../types";
+import { ResumeData, UserSession } from "../types";
 import { Sparkles, Briefcase, FileText, ArrowRight, Loader2, Info } from "lucide-react";
 
 interface AiBuilderProps {
   onGenerated: (data: Partial<ResumeData>) => void;
   onNavigateToBuilder: () => void;
   aiStatus: { status: string; message: string };
+  session?: UserSession;
 }
 
-export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus }: AiBuilderProps) {
+export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, session }: AiBuilderProps) {
   const [careerGoal, setCareerGoal] = useState("Staff Cloud Architect");
   const [education, setEducation] = useState("Master of Science in IT from Georgia Tech (2020)");
   const [skills, setSkills] = useState("AWS, Cloud Security, Kubernetes, Terraform, GoLang, Systems Design");
@@ -74,14 +75,15 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus }
       if (summaryData.output && expData.output) {
         const generatedResume: Partial<ResumeData> = {
           personal: {
-            fullName: "Alex Rivera", // Placeholder Name to fill
+            fullName: session?.fullName || "",
             jobTitle: careerGoal,
-            email: "alex.rivera@example.com",
-            phone: "+1 (555) 987-6543",
-            address: "Remote, United States",
-            linkedin: "linkedin.com/in/alex-rivera-cloud",
-            website: "alex-rivera.net",
+            email: session?.email || "",
+            phone: "",
+            address: "",
+            linkedin: "",
+            website: "",
             summary: summaryData.output.trim(),
+            dob: "",
           },
           education: [
             {
