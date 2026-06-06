@@ -64,11 +64,11 @@ export default function Footer({ onTabChange }: FooterProps) {
           <div className="space-y-2.5 pt-1">
             <div className="flex items-center justify-between text-white font-semibold">
               <span>ANUNAND P.R</span>
-              <span className="text-[10px] text-slate-500">Developer & Designer</span>
+              <span className="text-[10px] text-slate-500">Software Architect, Creator, and Founder</span>
             </div>
             <div className="flex items-center justify-between text-white font-semibold">
               <span>AKASH SUNIL</span>
-              <span className="text-[10px] text-slate-500">Full-Stack Architect</span>
+              <span className="text-[10px] text-slate-500">Software Architect, Creator, and Founder</span>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800 text-slate-500">

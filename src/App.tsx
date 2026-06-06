@@ -1156,11 +1156,11 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-50 text-xs">
                 <div>
                   <h4 className="font-bold text-slate-800">ANUNAND P.R</h4>
-                  <p className="text-slate-500 mt-1">Lead Ideation & Interface Designer specialist, targeting clean visual structures.</p>
+                  <p className="text-slate-500 mt-1">Software Architect, Creator, and Founder. Designing ultimate structures, interfaces, and design models.</p>
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800">AKASH SUNIL</h4>
-                  <p className="text-slate-500 mt-1">Full-Stack Cloud Engineer, targeting robust API integration pipelines and logic architectures.</p>
+                  <p className="text-slate-500 mt-1">Software Architect, Creator, and Founder. Engineering robust full-stack pipelines, databases, and application systems.</p>
                 </div>
               </div>
             </div>
