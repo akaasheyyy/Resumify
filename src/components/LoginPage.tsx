@@ -181,8 +181,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         </div>
         
         {/* App Title */}
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
-          <Sparkles className="w-7 h-7 text-blue-700 animate-pulse" /> Resumify
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2.5">
+          <img src="/logo.svg" alt="Resumify Logo" className="w-10 h-10 object-contain" referrerPolicy="no-referrer" /> Resumify
         </h2>
         <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-normal">
           The ultimate CV & portfolio wizard. Log in to securely sync your details, layout presets, and parse work-history with AI templates.

@@ -34,10 +34,10 @@ export default function Navbar({
           onClick={() => onTabChange("home")}
           className="flex items-center gap-2.5 group focus:outline-none"
         >
-          <div className="w-9 h-9 rounded-xl bg-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-700/20 group-hover:bg-blue-800 transition active:scale-95 duration-200">
-            <FileText className="w-5 h-5" />
+          <div className="w-9.5 h-9.5 rounded-xl overflow-hidden hover:scale-105 transition-all duration-200 border border-slate-150 flex items-center justify-center bg-white shrink-0 shadow-sm group-hover:shadow-md">
+            <img src="/logo.svg" alt="Resumify" className="w-8.5 h-8.5 object-contain" referrerPolicy="no-referrer" />
           </div>
-          <div>
+          <div className="text-left">
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-black tracking-tight text-slate-900 group-hover:text-blue-700 transition">Resumify</span>
               <span className="text-[9px] px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-100 font-bold uppercase rounded-md">V1.0</span>

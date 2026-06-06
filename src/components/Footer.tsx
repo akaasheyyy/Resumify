@@ -18,8 +18,8 @@ export default function Footer({ onTabChange }: FooterProps) {
         {/* Pitch Statement */}
         <div className="space-y-3.5">
           <div className="flex items-center gap-2 text-white">
-            <div className="w-6 h-6 rounded bg-blue-700 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-white" />
+            <div className="w-6.5 h-6.5 rounded-lg overflow-hidden bg-white flex items-center justify-center border border-slate-800 p-0.5 shrink-0">
+              <img src="/logo.svg" alt="Resumify" className="w-5.5 h-5.5 object-contain" referrerPolicy="no-referrer" />
             </div>
             <span className="text-base font-black tracking-tight">Resumify</span>
           </div>
