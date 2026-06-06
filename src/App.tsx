@@ -17,11 +17,12 @@ import { DEFAULT_RESUME_DATA, SAMPLE_RESUME_DATA } from "./data";
 import { ResumeData, UserSession } from "./types";
 import { 
   Sparkles, FileText, Download, RotateCcw, AlertCircle, CheckCircle, 
-  ArrowRight, Shield, Layers, HelpCircle, User, Mail, Send, Check 
+  ArrowRight, Shield, Layers, HelpCircle, User, Mail, Send, Check,
+  Trash2, PlusCircle, FolderOpen
 } from "lucide-react";
 import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, serverTimestamp, collection, query, where, onSnapshot } from "firebase/firestore";
 
 // Helper utility to compress base64 image (data URL) to a lightweight JPEG (256x256 square headshot)
 export function compressBase64Image(base64Str: string): Promise<string> {
@@ -68,6 +69,8 @@ export function compressBase64Image(base64Str: string): Promise<string> {
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("home");
   const [resumeData, setResumeData] = useState<ResumeData>(DEFAULT_RESUME_DATA);
+  const [userResumes, setUserResumes] = useState<any[]>([]);
+  const [activeResumeId, setActiveResumeId] = useState<string | null>(null);
   const [authIsOpen, setAuthIsOpen] = useState(false);
   const [session, setSession] = useState<UserSession>({
     email: "",
@@ -246,17 +249,17 @@ export default function App() {
     if (!session.isLoggedIn) {
       setSyncStatus("disabled");
       setResumeCreatedAt(null);
+      setUserResumes([]);
+      setActiveResumeId(null);
       return;
     }
 
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
-    const loadCloudResume = async () => {
-      setSyncStatus("saving");
-      const path = `resumes/${uid}`;
+    // Defensive Check: Ensure User Profile document exists in `/users` collection to satisfy security rules check
+    const checkUserProfile = async () => {
       try {
-        // Defensive Check: Ensure User Profile document exists in the `/users` collection to satisfy security rules check (existsCheck)
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) {
@@ -271,98 +274,49 @@ export default function App() {
             updatedAt: serverTimestamp(),
           });
         }
-
-        const docRef = doc(db, "resumes", uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const cloudData = docSnap.data() as any;
-          setResumeCreatedAt(cloudData.createdAt || null);
-          
-          // Detect if the loaded data is the old Alex Rivera default sample draft
-          const isSample = cloudData.personal?.fullName === "Alex Rivera" || cloudData.personal?.email === "alex.rivera@example.com";
-          
-          if (isSample) {
-            // Load clean, personalized blank data with active user session details
-            const cleanPersonal = {
-              ...DEFAULT_RESUME_DATA.personal,
-              fullName: auth.currentUser?.displayName || session.fullName || "",
-              email: auth.currentUser?.email || session.email || "",
-            };
-            setResumeData({
-              ...DEFAULT_RESUME_DATA,
-              personal: cleanPersonal,
-            });
-          } else {
-            setResumeData({
-              personal: cloudData.personal || { fullName: "" },
-              education: cloudData.education || [],
-              experience: cloudData.experience || [],
-              skills: cloudData.skills || [],
-              projects: cloudData.projects || [],
-              certifications: cloudData.certifications || [],
-              languages: cloudData.languages || [],
-              selectedTemplate: cloudData.selectedTemplate || "modern",
-              selectedColor: cloudData.selectedColor || "#1e3a8a",
-              selectedFont: cloudData.selectedFont,
-              selectedDensity: cloudData.selectedDensity,
-              selectedLayoutVariation: cloudData.selectedLayoutVariation,
-              selectedBulletStyle: cloudData.selectedBulletStyle,
-              selectedBorderAccent: cloudData.selectedBorderAccent,
-              showAvatar: cloudData.showAvatar,
-              selectedAvatarShape: cloudData.selectedAvatarShape,
-            });
-          }
-          setSyncStatus("saved");
-        } else {
-          // Document does not exist yet; prime it with current data state personalized with active user details
-          const initialPersonal = {
-            ...DEFAULT_RESUME_DATA.personal,
-            fullName: auth.currentUser?.displayName || session.fullName || "",
-            email: auth.currentUser?.email || session.email || "",
-          };
-          await setDoc(docRef, {
-            userId: uid,
-            personal: initialPersonal,
-            education: [],
-            experience: [],
-            skills: [],
-            projects: [],
-            certifications: [],
-            languages: [],
-            selectedTemplate: "modern",
-            selectedColor: "#1e3a8a",
-            selectedFont: "Inter, sans-serif",
-            selectedDensity: "comfortable",
-            selectedLayoutVariation: "classic",
-            selectedBulletStyle: "disc",
-            selectedBorderAccent: "top-bar",
-            showAvatar: false,
-            selectedAvatarShape: "circle",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-          setResumeData({
-            ...DEFAULT_RESUME_DATA,
-            personal: initialPersonal
-          });
-          setSyncStatus("saved");
-        }
-      } catch (err: any) {
-        console.error("Cloud Resume Loading failed:", err);
-        setSyncStatus("error");
-        setSyncError(err.message || String(err));
-      } finally {
-        setIsInitialLoad(false);
+      } catch (err) {
+        console.warn("Defensive user profile confirmation warning:", err);
       }
     };
 
-    loadCloudResume();
+    checkUserProfile();
+
+    // Setup real-time listener for this customer's resumes/drafts
+    setSyncStatus("saving");
+    const q = query(collection(db, "resumes"), where("userId", "==", uid));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort by updatedAt desc, fallback to createdAt
+        list.sort((a, b) => {
+          const tA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : (a.updatedAt?.seconds || 0);
+          const tB = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : (b.updatedAt?.seconds || 0);
+          return tB - tA;
+        });
+
+        setUserResumes(list);
+        setSyncStatus("saved");
+        setIsInitialLoad(false);
+      },
+      (err: any) => {
+        console.error("Cloud Resumes List Sync failed:", err);
+        setSyncStatus("error");
+        setSyncError(err.message || String(err));
+        setIsInitialLoad(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, [session.isLoggedIn]);
 
   // Debounced Autosave block to Firestore
   useEffect(() => {
-    if (!session.isLoggedIn || isInitialLoad) return;
+    if (!session.isLoggedIn || isInitialLoad || !activeResumeId) return;
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
@@ -390,9 +344,8 @@ export default function App() {
         }
       }
 
-      const path = `resumes/${uid}`;
       try {
-        const docRef = doc(db, "resumes", uid);
+        const docRef = doc(db, "resumes", activeResumeId);
         await setDoc(docRef, {
           userId: uid,
           personal: activePersonal,
@@ -423,7 +376,7 @@ export default function App() {
     }, 1500);
 
     return () => clearTimeout(delayDebounceTimeout);
-  }, [resumeData, session.isLoggedIn, isInitialLoad]);
+  }, [resumeData, session.isLoggedIn, isInitialLoad, activeResumeId]);
 
   // Login handler
   const handleLoginSuccess = (user: UserSession) => {
@@ -503,6 +456,192 @@ export default function App() {
         showAvatar: false,
         selectedAvatarShape: "circle",
       });
+    }
+  };
+
+  // Draft Workspace Controllers
+  const handleSelectActiveDraft = (id: string) => {
+    const selected = userResumes.find(r => r.id === id);
+    if (selected) {
+      setIsInitialLoad(true);
+      setResumeCreatedAt(selected.createdAt || null);
+      
+      const loadedData: ResumeData = {
+        personal: selected.personal || { fullName: "" },
+        education: selected.education || [],
+        experience: selected.experience || [],
+        skills: selected.skills || [],
+        projects: selected.projects || [],
+        certifications: selected.certifications || [],
+        languages: selected.languages || [],
+        selectedTemplate: selected.selectedTemplate || "modern",
+        selectedColor: selected.selectedColor || "#1e3a8a",
+        selectedFont: selected.selectedFont || "Inter, sans-serif",
+        selectedDensity: selected.selectedDensity || "comfortable",
+        selectedLayoutVariation: selected.selectedLayoutVariation || "classic",
+        selectedBulletStyle: selected.selectedBulletStyle || "disc",
+        selectedBorderAccent: selected.selectedBorderAccent || "top-bar",
+        showAvatar: selected.showAvatar !== undefined ? selected.showAvatar : false,
+        selectedAvatarShape: selected.selectedAvatarShape || "circle",
+      };
+
+      setResumeData(loadedData);
+      setActiveResumeId(id);
+      
+      // Temporarily lock triggers to lock out autosave cycles on first initial boot
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 300);
+    }
+  };
+
+  const handleCreateBlankResume = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const initialPersonal = {
+      fullName: session.fullName || "",
+      jobTitle: "",
+      email: session.email || "",
+      phone: "",
+      address: "",
+      linkedin: "",
+      website: "",
+      summary: "",
+      dob: ""
+    };
+
+    const newDocId = `resume-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const docRef = doc(db, "resumes", newDocId);
+
+    try {
+      setSyncStatus("saving");
+      setIsInitialLoad(true);
+      await setDoc(docRef, {
+        userId: uid,
+        personal: initialPersonal,
+        education: [],
+        experience: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        languages: [],
+        selectedTemplate: "modern",
+        selectedColor: "#1e3a8a",
+        selectedFont: "Inter, sans-serif",
+        selectedDensity: "comfortable",
+        selectedLayoutVariation: "classic",
+        selectedBulletStyle: "disc",
+        selectedBorderAccent: "top-bar",
+        showAvatar: false,
+        selectedAvatarShape: "circle",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setResumeCreatedAt(new Date());
+      setResumeData({
+        personal: initialPersonal,
+        education: [],
+        experience: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        languages: [],
+        selectedTemplate: "modern",
+        selectedColor: "#1e3a8a",
+        selectedFont: "Inter, sans-serif",
+        selectedDensity: "comfortable",
+        selectedLayoutVariation: "classic",
+        selectedBulletStyle: "disc",
+        selectedBorderAccent: "top-bar",
+        showAvatar: false,
+        selectedAvatarShape: "circle",
+      });
+      setActiveResumeId(newDocId);
+      setSyncStatus("saved");
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 300);
+    } catch (err: any) {
+      console.error("Error creating blank draft:", err);
+      alert("Failed to initialize blank draft: " + err.message);
+    }
+  };
+
+  const handleLoadSampleAsDraft = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const newDocId = `resume-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const docRef = doc(db, "resumes", newDocId);
+
+    try {
+      setSyncStatus("saving");
+      setIsInitialLoad(true);
+      await setDoc(docRef, {
+        userId: uid,
+        personal: SAMPLE_RESUME_DATA.personal,
+        education: SAMPLE_RESUME_DATA.education,
+        experience: SAMPLE_RESUME_DATA.experience,
+        skills: SAMPLE_RESUME_DATA.skills,
+        projects: SAMPLE_RESUME_DATA.projects,
+        certifications: SAMPLE_RESUME_DATA.certifications,
+        languages: SAMPLE_RESUME_DATA.languages,
+        selectedTemplate: SAMPLE_RESUME_DATA.selectedTemplate || "modern",
+        selectedColor: SAMPLE_RESUME_DATA.selectedColor || "#1e3a8a",
+        selectedFont: SAMPLE_RESUME_DATA.selectedFont || "Inter, sans-serif",
+        selectedDensity: SAMPLE_RESUME_DATA.selectedDensity || "comfortable",
+        selectedLayoutVariation: SAMPLE_RESUME_DATA.selectedLayoutVariation || "classic",
+        selectedBulletStyle: SAMPLE_RESUME_DATA.selectedBulletStyle || "disc",
+        selectedBorderAccent: SAMPLE_RESUME_DATA.selectedBorderAccent || "top-bar",
+        showAvatar: SAMPLE_RESUME_DATA.showAvatar || false,
+        selectedAvatarShape: SAMPLE_RESUME_DATA.selectedAvatarShape || "circle",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setResumeCreatedAt(new Date());
+      setResumeData(SAMPLE_RESUME_DATA);
+      setActiveResumeId(newDocId);
+      setSyncStatus("saved");
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 300);
+    } catch (err: any) {
+      console.error("Error loading sample as draft:", err);
+      alert("Failed to build sample draft: " + err.message);
+    }
+  };
+
+  const handleDeleteDraft = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this resume draft? This action is permanent.")) {
+      try {
+        setSyncStatus("saving");
+        await deleteDoc(doc(db, "resumes", id));
+        if (activeResumeId === id) {
+          setActiveResumeId(null);
+        }
+        setSyncStatus("saved");
+      } catch (err: any) {
+        console.error("Error deleting draft:", err);
+        alert("Failed to delete draft: " + err.message);
+      }
+    }
+  };
+
+  const handleClearAllDrafts = async () => {
+    if (window.confirm("Are you sure you want to delete ALL of your resume drafts? This action is permanent and cannot be undone.")) {
+      try {
+        setSyncStatus("saving");
+        const deletePromises = userResumes.map(draft => deleteDoc(doc(db, "resumes", draft.id)));
+        await Promise.all(deletePromises);
+        setActiveResumeId(null);
+        setSyncStatus("saved");
+      } catch (err: any) {
+        console.error("Error clearing all drafts:", err);
+        alert("Failed to delete all drafts: " + err.message);
+      }
     }
   };
 
@@ -687,15 +826,149 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: Interactive Resume Builder */}
-        {currentTab === "builder" && (
+        {/* TAB 2: Interactive Resume Builder - Workspace List */}
+        {currentTab === "builder" && activeResumeId === null && (
+          <div className="space-y-6 py-4 animate-fadeIn">
+            {/* Workspace Header Panel */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-md relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
+              <div className="space-y-1 relative z-10">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight font-sans">Your Resume Draft Workspace</h2>
+                <p className="text-xs text-slate-300 font-medium">Quickly jump back into editing or start fresh templates.</p>
+              </div>
+              <div className="flex flex-wrap gap-2.5 relative z-10 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleClearAllDrafts}
+                  className="px-4 py-2.5 bg-red-950/45 hover:bg-red-900/50 border border-red-800/20 text-red-100 font-bold rounded-xl text-xs transition active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Clear All Drafts
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateBlankResume}
+                  className="px-4 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition active:scale-[0.98] flex items-center gap-1.5 shadow-sm shadow-blue-700/10 cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" /> Blank Resume
+                </button>
+              </div>
+            </div>
+
+            {/* List or Grid of Existing Resume Drafts */}
+            {userResumes.length === 0 ? (
+              <div className="bg-white border border-slate-150 rounded-2xl p-12 text-center space-y-5 shadow-3xs max-w-lg mx-auto">
+                <div className="w-12 h-12 bg-blue-50 text-blue-700 border border-blue-105 rounded-xl flex items-center justify-center mx-auto">
+                  <FolderOpen className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-slate-900">No Resume Drafts Active</h3>
+                  <p className="text-xs text-slate-450 leading-relaxed font-semibold">
+                    You don't have any resume drafts saved to your cloud space yet. Start fresh with a blank template or load our standard sample layout!
+                  </p>
+                </div>
+                <div className="flex justify-center gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleLoadSampleAsDraft}
+                    className="px-4 py-2 border border-slate-205 text-slate-705 font-bold rounded-xl text-xs hover:bg-slate-50 transition active:scale-95 cursor-pointer bg-white"
+                  >
+                    Load Standard Sample
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateBlankResume}
+                    className="px-4 py-2 bg-blue-705 hover:bg-blue-805 text-white font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" /> Create Blank
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {userResumes.map((draft) => {
+                  const name = draft.personal?.fullName || "Unnamed Resume";
+                  const templateName = (draft.selectedTemplate || "MODERN").toUpperCase();
+                  const jobTitle = draft.personal?.jobTitle || "Resume Profile";
+                  
+                  return (
+                    <div 
+                      key={draft.id}
+                      className="bg-white border border-slate-150 rounded-2xl p-5 shadow-3xs flex flex-col justify-between group hover:border-blue-400 transition duration-200 relative overflow-hidden"
+                    >
+                      <div className="space-y-4">
+                        {/* Card Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+                            <FileText className="w-4.5 h-4.5" />
+                          </div>
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-650 text-[10px] font-black uppercase tracking-wider rounded-md font-mono">
+                            {templateName}
+                          </span>
+                        </div>
+
+                        {/* Title and details */}
+                        <div className="space-y-1.5">
+                          <h4 className="text-sm font-bold text-slate-900 truncate animate-fadeIn" title={`${name}'s Resume Draft`}>
+                            {name || "Professional"}'s Resume Draft
+                          </h4>
+                          <div className="flex flex-col gap-1.5 text-[11px] text-slate-450 font-semibold leading-relaxed">
+                            <p className="truncate">
+                              <span className="text-slate-400 font-bold uppercase font-mono tracking-wide text-[9px]">Title: </span>
+                              {jobTitle || "Not Specified"}
+                            </p>
+                            <p className="truncate">
+                              <span className="text-slate-400 font-bold uppercase font-mono tracking-wide text-[9px]">Edited by: </span>
+                              {draft.personal?.fullName || "Not Specified"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="my-4 border-t border-slate-100" />
+
+                      {/* Card Actions */}
+                      <div className="flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDraft(draft.id)}
+                          className="text-[11px] text-red-650 hover:text-red-750 font-bold transition flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" /> Delete
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectActiveDraft(draft.id)}
+                          className="text-[11px] text-blue-700 hover:text-blue-800 font-extrabold transition flex items-center gap-0.5 px-2.5 py-1 rounded hover:bg-blue-50 cursor-pointer"
+                        >
+                          Edit Draft <ArrowRight className="w-3.5 h-3.5 pl-0.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: Interactive Resume Builder - Editor Active screen */}
+        {currentTab === "builder" && activeResumeId !== null && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fadeIn">
             {/* Input Form Wizard */}
-            <div className="lg:col-span-5 space-y-4 no-print">
+            <div className="lg:col-span-5 space-y-4 no-print font-sans">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-                  <FileText className="w-5 h-5 text-blue-700" /> Interactive CV Workshop
-                </h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveResumeId(null)}
+                    className="px-2.5 py-2 rounded-xl border border-slate-200 text-[10px] font-extrabold text-slate-600 bg-white hover:bg-slate-50 transition active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-3xs"
+                    title="Back to drafts screen"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5 rotate-180 text-blue-600" /> Workspace
+                  </button>
+                  <h2 className="text-xs font-bold text-slate-500 uppercase font-mono tracking-wider ml-1">Editor</h2>
+                </div>
                 
                 {/* Reset or Clear progress buttons */}
                 <div className="flex gap-2">
