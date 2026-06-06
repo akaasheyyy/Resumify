@@ -186,14 +186,13 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())
-        && incoming().createdAt == request.time
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+        && incoming().createdAt == request.time;
       allow update: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())
         && existing().userId == request.auth.uid
         && incoming().userId == request.auth.uid
-        && incoming().createdAt == existing().createdAt
+        && (!('createdAt' in existing()) || !('createdAt' in incoming()) || incoming().createdAt == existing().createdAt)
         && incoming().updatedAt == request.time;
       allow delete: if isSignedIn()
         && existing().userId == request.auth.uid;

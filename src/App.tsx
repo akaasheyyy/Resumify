@@ -364,14 +364,14 @@ export default function App() {
           selectedBorderAccent: resumeData.selectedBorderAccent || "none",
           showAvatar: resumeData.showAvatar !== undefined ? resumeData.showAvatar : false,
           selectedAvatarShape: resumeData.selectedAvatarShape || "circle",
-          createdAt: resumeCreatedAt || serverTimestamp(),
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
         setSyncStatus("saved");
       } catch (err: any) {
         console.error("Cloud Resume Autosave failed:", err);
         setSyncStatus("error");
         setSyncError(err.message || String(err));
+        handleFirestoreError(err, OperationType.WRITE, `resumes/${activeResumeId}`);
       }
     }, 1500);
 
