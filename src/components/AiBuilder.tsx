@@ -208,7 +208,7 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, 
 
           <button
             type="submit"
-            disabled={generating || aiStatus.status === "missing_key"}
+            disabled={generating}
             className="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg text-xs transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
           >
             {generating ? (
@@ -219,10 +219,20 @@ export default function AiBuilder({ onGenerated, onNavigateToBuilder, aiStatus, 
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                Auto-Generate Full CV with AI
+                {aiStatus.status === "missing_key" ? "Auto-Generate Full CV (Demo Engine)" : "Auto-Generate Full CV with AI"}
               </>
             )}
           </button>
+
+          {aiStatus.status === "missing_key" && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-[10px] text-amber-800 leading-relaxed">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <div>
+                <span className="font-bold block">Smart Fallback Active</span>
+                No Gemini API key is configured. The generator will use high-fidelity local write-heuristics to synthesize outstanding sample materials instantly.
+              </div>
+            </div>
+          )}
         </form>
 
         {/* Results / Help Panel */}
