@@ -126,6 +126,31 @@
   color: #4b5563 !important;
 }
 
+/* Sky/blue indicator banners (for 'Coming Soon' and system status blocks) */
+.dark .bg-sky-50:not(#printable-cv *) {
+  background-color: rgba(14, 165, 233, 0.1) !important;
+  color: #bae6fd !important;
+  border-color: rgba(56, 189, 248, 0.2) !important;
+}
+
+.dark .bg-sky-100:not(#printable-cv *) {
+  background-color: rgba(14, 165, 233, 0.2) !important;
+  color: #e0f2fe !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+.dark .text-sky-950:not(#printable-cv *),
+.dark .text-sky-900:not(#printable-cv *),
+.dark .text-sky-850:not(#printable-cv *),
+.dark .text-sky-800:not(#printable-cv *) {
+  color: #bae6fd !important;
+}
+
+.dark .text-sky-700:not(#printable-cv *),
+.dark .text-sky-600:not(#printable-cv *) {
+  color: #38bdf8 !important;
+}
+
 .dark .divide-y > * {
   border-color: #1f2937 !important;
 }
