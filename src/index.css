@@ -18,6 +18,15 @@
   color: #f3f4f6 !important;
 }
 
+/* Ensure the resume preview in dark mode maintains standard paper backgrounds & dark text */
+.dark #printable-cv {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+.dark #printable-cv * {
+  border-color: #e2e8f0 !important;
+}
+
 /* Ensure navbar transitions to deep dark slate glass */
 .dark header {
   background-color: rgba(17, 24, 39, 0.9) !important;
@@ -25,34 +34,59 @@
   color: #ffffff !important;
 }
 
-/* Target all white card structures outside the resume preview */
+/* Target all white card structures outside the resume preview to have a sleek background */
 .dark .bg-white:not(#printable-cv):not(#printable-cv *) {
   background-color: #111827 !important; 
   color: #f3f4f6 !important;
   border-color: #1f2937 !important;
 }
 
-/* Support and admin panels, general grey areas transition */
-.dark .bg-slate-50:not(#printable-cv):not(#printable-cv *),
-.dark .bg-slate-100:not(#printable-cv):not(#printable-cv *),
+/* Support, wizard panels, step containers and general grey areas transition (restoring visual depth) */
+.dark .bg-slate-50:not(#printable-cv):not(#printable-cv *) {
+  background-color: #0c111d !important; /* contrast background - deepest background layer */
+}
+
+.dark .bg-slate-100:not(#printable-cv):not(#printable-cv *) {
+  background-color: #111827 !important; /* visual nested layer - step panels, list wrappers */
+}
+
 .dark .bg-slate-200:not(#printable-cv):not(#printable-cv *) {
-  background-color: #111827 !important; 
+  background-color: #1e293b !important; /* elevated visual accents */
 }
 
 .dark .bg-slate-250:not(#printable-cv):not(#printable-cv *) {
   background-color: #1e293b !important;
 }
 
-/* Fix text colors globally outside the resume canvas in dark mode */
+/* Translucent gray builders sections */
+.dark .bg-slate-50\/50:not(#printable-cv):not(#printable-cv *) {
+  background-color: rgba(30, 41, 59, 0.45) !important;
+}
+
+/* Fix text colors globally outside the resume canvas in dark mode including custom slates */
+.dark .text-slate-950:not(#printable-cv *),
 .dark .text-slate-900:not(#printable-cv *),
+.dark .text-slate-850:not(#printable-cv *),
 .dark .text-slate-800:not(#printable-cv *),
+.dark .text-slate-755:not(#printable-cv *),
+.dark .text-slate-705:not(#printable-cv *),
 .dark .text-slate-700:not(#printable-cv *) {
   color: #f3f4f6 !important;
 }
 
+.dark .text-slate-650:not(#printable-cv *),
 .dark .text-slate-600:not(#printable-cv *),
+.dark .text-slate-550:not(#printable-cv *),
 .dark .text-slate-500:not(#printable-cv *) {
   color: #9ca3af !important;
+}
+
+.dark .text-slate-450:not(#printable-cv *),
+.dark .text-slate-405:not(#printable-cv *),
+.dark .text-slate-400:not(#printable-cv *),
+.dark .text-slate-350:not(#printable-cv *),
+.dark .text-slate-300:not(#printable-cv *) {
+  color: #cbd5e1 !important;
 }
 
 /* Make custom select boxes, input fields, and options look incredibly polished */
@@ -74,11 +108,23 @@
   background-color: #1e293b !important;
 }
 
+.dark .hover\:bg-slate-50:hover:not(#printable-cv *),
+.dark .hover\:bg-slate-100:hover:not(#printable-cv *),
+.dark .hover\:bg-slate-200:hover:not(#printable-cv *) {
+  background-color: #1e293b !important;
+}
+
 /* Specific elements like border and divider accent coloring */
+.dark .border-slate-50:not(#printable-cv *),
 .dark .border-slate-100:not(#printable-cv *),
 .dark .border-slate-150:not(#printable-cv *),
-.dark .border-slate-200:not(#printable-cv *) {
-  border-color: #1f2937 !important;
+.dark .border-slate-200:not(#printable-cv *),
+.dark .border-slate-205:not(#printable-cv *),
+.dark .border-slate-250:not(#printable-cv *),
+.dark .border-slate-300:not(#printable-cv *),
+.dark .border-slate-350:not(#printable-cv *),
+.dark .border-slate-400:not(#printable-cv *) {
+  border-color: #334155 !important;
 }
 
 /* Specific lists or list text components */
@@ -123,7 +169,7 @@
 
 /* Star ratings colors, metadata lines, and scrollbars */
 .dark .text-slate-300:not(#printable-cv *) {
-  color: #4b5563 !important;
+  color: #cbd5e1 !important;
 }
 
 /* Sky/blue indicator banners (for 'Coming Soon' and system status blocks) */
