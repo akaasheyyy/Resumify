@@ -15,6 +15,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { UserSession } from "../types";
+import { sendWelcomeEmail } from "../lib/emailService";
 
 interface LoginPageProps {
   onLoginSuccess: (session: UserSession) => void;
@@ -84,20 +85,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         });
       }
 
-      try {
-        fetch("/api/email/send-welcome", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: firebaseUser.email || "",
-            fullName: resolvedName
-          })
-        }).then(res => res.json())
-          .then(data => console.log("Welcome email status:", data))
-          .catch(err => console.error("Failed to route welcome email:", err));
-      } catch (mailErr) {
-        console.error("Welcome email error:", mailErr);
-      }
+      sendWelcomeEmail(firebaseUser.email || "", resolvedName)
+        .then(res => console.log("Welcome email sent:", res))
+        .catch(err => console.error("Failed to send welcome email:", err));
 
       setLoading(false);
       setSuccess(true);
@@ -169,20 +159,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         });
       }
 
-      try {
-        fetch("/api/email/send-welcome", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: firebaseUser.email || trimmedEmail.toLowerCase(),
-            fullName: resolvedName
-          })
-        }).then(res => res.json())
-          .then(data => console.log("Welcome email status:", data))
-          .catch(err => console.error("Failed to route welcome email:", err));
-      } catch (mailErr) {
-        console.error("Welcome email error:", mailErr);
-      }
+      sendWelcomeEmail(firebaseUser.email || trimmedEmail.toLowerCase(), resolvedName)
+        .then(res => console.log("Welcome email sent:", res))
+        .catch(err => console.error("Failed to send welcome email:", err));
 
       setLoading(false);
       setSuccess(true);

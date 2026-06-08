@@ -15,6 +15,7 @@ import {
   updateProfile 
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { sendWelcomeEmail } from "../lib/emailService";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -103,20 +104,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
         });
       }
 
-      try {
-        fetch("/api/email/send-welcome", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email || email.toLowerCase().trim(),
-            fullName: resolvedName
-          })
-        }).then(res => res.json())
-          .then(data => console.log("Welcome email status:", data))
-          .catch(err => console.error("Failed to route welcome email:", err));
-      } catch (mailErr) {
-        console.error("Welcome email error:", mailErr);
-      }
+      sendWelcomeEmail(user.email || email.toLowerCase().trim(), resolvedName)
+        .then(res => console.log("Welcome email sent:", res))
+        .catch(err => console.error("Failed to send welcome email:", err));
 
       setLoading(false);
       setSuccess(true);
@@ -166,20 +156,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
         });
       }
 
-      try {
-        fetch("/api/email/send-welcome", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email || "",
-            fullName: resolvedName
-          })
-        }).then(res => res.json())
-          .then(data => console.log("Welcome email status:", data))
-          .catch(err => console.error("Failed to route welcome email:", err));
-      } catch (mailErr) {
-        console.error("Welcome email error:", mailErr);
-      }
+      sendWelcomeEmail(user.email || "", resolvedName)
+        .then(res => console.log("Welcome email sent:", res))
+        .catch(err => console.error("Failed to send welcome email:", err));
 
       setLoading(false);
       setSuccess(true);
