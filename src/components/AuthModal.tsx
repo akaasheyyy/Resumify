@@ -103,21 +103,19 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
         });
       }
 
-      if (isNewUser) {
-        try {
-          fetch("/api/email/send-welcome", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: user.email || email.toLowerCase().trim(),
-              fullName: resolvedName
-            })
-          }).then(res => res.json())
-            .then(data => console.log("Welcome email status:", data))
-            .catch(err => console.error("Failed to route welcome email:", err));
-        } catch (mailErr) {
-          console.error("Welcome email error:", mailErr);
-        }
+      try {
+        fetch("/api/email/send-welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email || email.toLowerCase().trim(),
+            fullName: resolvedName
+          })
+        }).then(res => res.json())
+          .then(data => console.log("Welcome email status:", data))
+          .catch(err => console.error("Failed to route welcome email:", err));
+      } catch (mailErr) {
+        console.error("Welcome email error:", mailErr);
       }
 
       setLoading(false);
@@ -168,21 +166,19 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
         });
       }
 
-      if (isNewUser) {
-        try {
-          fetch("/api/email/send-welcome", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: user.email || "",
-              fullName: resolvedName
-            })
-          }).then(res => res.json())
-            .then(data => console.log("Welcome email status:", data))
-            .catch(err => console.error("Failed to route welcome email:", err));
-        } catch (mailErr) {
-          console.error("Welcome email error:", mailErr);
-        }
+      try {
+        fetch("/api/email/send-welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email || "",
+            fullName: resolvedName
+          })
+        }).then(res => res.json())
+          .then(data => console.log("Welcome email status:", data))
+          .catch(err => console.error("Failed to route welcome email:", err));
+      } catch (mailErr) {
+        console.error("Welcome email error:", mailErr);
       }
 
       setLoading(false);
