@@ -90,8 +90,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
       // Sync User Profile Record to Firestore
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
+      const isNewUser = !userSnap.exists() || !isLoginTab;
 
-      if (!userSnap.exists() || !isLoginTab) {
+      if (isNewUser) {
         await setDoc(userRef, {
           uid: user.uid,
           fullName: resolvedName,
@@ -100,6 +101,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+      }
+
+      if (isNewUser) {
+        try {
+          fetch("/api/email/send-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email || email.toLowerCase().trim(),
+              fullName: resolvedName
+            })
+          }).then(res => res.json())
+            .then(data => console.log("Welcome email status:", data))
+            .catch(err => console.error("Failed to route welcome email:", err));
+        } catch (mailErr) {
+          console.error("Welcome email error:", mailErr);
+        }
       }
 
       setLoading(false);
@@ -137,8 +155,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
       // Sync User Profile to Firestore to satisfy foreign relationship constraints
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
+      const isNewUser = !userSnap.exists();
 
-      if (!userSnap.exists()) {
+      if (isNewUser) {
         await setDoc(userRef, {
           uid: user.uid,
           fullName: resolvedName,
@@ -147,6 +166,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, userEmail =
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+      }
+
+      if (isNewUser) {
+        try {
+          fetch("/api/email/send-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email || "",
+              fullName: resolvedName
+            })
+          }).then(res => res.json())
+            .then(data => console.log("Welcome email status:", data))
+            .catch(err => console.error("Failed to route welcome email:", err));
+        } catch (mailErr) {
+          console.error("Welcome email error:", mailErr);
+        }
       }
 
       setLoading(false);

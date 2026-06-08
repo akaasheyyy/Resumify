@@ -186,7 +186,7 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())
-        && incoming().createdAt == request.time;
+        && (!('createdAt' in incoming()) || incoming().createdAt == request.time);
       allow update: if isSignedIn()
         && isValidId(resumeId)
         && isValidResume(incoming())

@@ -70,8 +70,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       // Sync User Profile Record to Firestore
       const userRef = doc(db, "users", firebaseUser.uid);
       const userSnap = await getDoc(userRef);
+      const isNewUser = !userSnap.exists();
 
-      if (!userSnap.exists()) {
+      if (isNewUser) {
         await setDoc(userRef, {
           uid: firebaseUser.uid,
           fullName: resolvedName,
@@ -81,6 +82,23 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+      }
+
+      if (isNewUser) {
+        try {
+          fetch("/api/email/send-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: firebaseUser.email || "",
+              fullName: resolvedName
+            })
+          }).then(res => res.json())
+            .then(data => console.log("Welcome email status:", data))
+            .catch(err => console.error("Failed to route welcome email:", err));
+        } catch (mailErr) {
+          console.error("Welcome email error:", mailErr);
+        }
       }
 
       setLoading(false);
@@ -139,8 +157,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       // Sync User Profile Record to Firestore
       const userRef = doc(db, "users", firebaseUser.uid);
       const userSnap = await getDoc(userRef);
+      const isNewUser = !userSnap.exists() || !isLoginTab;
 
-      if (!userSnap.exists() || !isLoginTab) {
+      if (isNewUser) {
         await setDoc(userRef, {
           uid: firebaseUser.uid,
           fullName: resolvedName,
@@ -150,6 +169,23 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+      }
+
+      if (isNewUser) {
+        try {
+          fetch("/api/email/send-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: firebaseUser.email || trimmedEmail.toLowerCase(),
+              fullName: resolvedName
+            })
+          }).then(res => res.json())
+            .then(data => console.log("Welcome email status:", data))
+            .catch(err => console.error("Failed to route welcome email:", err));
+        } catch (mailErr) {
+          console.error("Welcome email error:", mailErr);
+        }
       }
 
       setLoading(false);

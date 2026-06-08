@@ -390,6 +390,104 @@ app.post("/api/admin/send-email", async (req, res) => {
   }
 });
 
+// Endpoint 4: Dispatch welcome email to new/fresh users via EmailJS or simulated logging
+app.post("/api/email/send-welcome", async (req, res) => {
+  try {
+    const { email, fullName } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email parameter is required to send welcome message." });
+    }
+
+    const serviceId = process.env.EMAILJS_SERVICE_ID || "";
+    const templateId = process.env.EMAILJS_TEMPLATE_ID || "";
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.EMAILJS_USER_ID || "";
+    const privateKey = process.env.EMAILJS_PRIVATE_KEY || process.env.EMAILJS_ACCESS_TOKEN || "";
+
+    console.log(`[WELCOME EMAIL DISPATCHER] Triggered for email: ${email}, name: ${fullName || "Guest"}`);
+
+    if (serviceId && templateId && publicKey) {
+      // Build standard EmailJS sending payload structure
+      const emailjsPayload: any = {
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        template_params: {
+          to_email: email,
+          to_name: fullName || "Valued User",
+          user_email: email,
+          user_name: fullName || "Valued User",
+          subject: "Welcome to Resumify!",
+          message: `Hi ${fullName || "there"},\n\nWelcome to Resumify! We're absolutely thrilled to helper you construct your pristine, ATS-optimized CVs and portfolios.\n\nBest wishes,\nThe Resumify Team`
+        }
+      };
+
+      // Add access token if provided
+      if (privateKey) {
+        emailjsPayload.accessToken = privateKey;
+      }
+
+      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(emailjsPayload)
+      });
+
+      const responseText = await response.text();
+
+      if (response.ok) {
+        console.log(`[EMAILJS SUCCESS] Welcome email delivered successfully via REST endpoint! Response: ${responseText}`);
+        return res.json({
+          success: true,
+          mode: "real",
+          message: "Welcome email delivered successfully via EmailJS integration.",
+          response: responseText
+        });
+      } else {
+        console.error(`[EMAILJS CORRUPTION] REST service returned status ${response.status}: ${responseText}`);
+        return res.status(response.status).json({
+          success: false,
+          error: `EmailJS API dispatch failed: ${responseText}`
+        });
+      }
+    } else {
+      // Fallback sandbox log mode
+      console.log("\n=======================================================");
+      console.log(`[EMAILJS SANDBOX PREVIEW - NEW USER GREETING DISPATCHED]`);
+      console.log(`RECIPIENT: ${email}`);
+      console.log(`NAME: ${fullName || "Guest User"}`);
+      console.log(`SUBJECT: Welcome to Resumify!`);
+      console.log("-------------------------------------------------------");
+      console.log(`Dear ${fullName || "User"},\n`);
+      console.log(`Welcome to Resumify - your interactive CV & portfolio engine!`);
+      console.log(`We're happy to support your cloud career achievements.`);
+      console.log("-------------------------------------------------------");
+      console.log(`STATION STATUS: Credentials not fully configured in Secrets.`);
+      console.log(`To route to actual users via EmailJS, define in your setting secrets:`);
+      console.log(`- EMAILJS_SERVICE_ID`);
+      console.log(`- EMAILJS_TEMPLATE_ID`);
+      console.log(`- EMAILJS_PUBLIC_KEY`);
+      console.log(`- EMAILJS_PRIVATE_KEY`);
+      console.log("=======================================================\n");
+
+      return res.json({
+        success: true,
+        mode: "simulated",
+        message: "EmailJS welcome mailbox simulation logged to server console successfully.",
+        preview: {
+          to: email,
+          name: fullName || "Guest User",
+          subject: "Welcome to Resumify!"
+        }
+      });
+    }
+  } catch (error: any) {
+    console.error("Welcome email delivery exception:", error);
+    res.status(500).json({ error: error.message || "Welcome email delivery pipeline crashed." });
+  }
+});
+
 // Configure Vite or Serve static assets
 async function start() {
   if (process.env.NODE_ENV !== "production") {
