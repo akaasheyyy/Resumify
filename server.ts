@@ -398,10 +398,10 @@ app.post("/api/email/send-welcome", async (req, res) => {
       return res.status(400).json({ error: "Email parameter is required to send welcome message." });
     }
 
-    const serviceId = process.env.EMAILJS_SERVICE_ID || "";
-    const templateId = process.env.EMAILJS_TEMPLATE_ID || "";
-    const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.EMAILJS_USER_ID || "";
-    const privateKey = process.env.EMAILJS_PRIVATE_KEY || process.env.EMAILJS_ACCESS_TOKEN || "";
+    const serviceId = process.env.EMAILJS_SERVICE_ID || "service_4gdof5i";
+    const templateId = process.env.EMAILJS_TEMPLATE_ID || "template_mejlhea";
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY || "uVQQaQEsziCobXVg4";
+    const privateKey = process.env.EMAILJS_PRIVATE_KEY || "MHO3f1FchNGtnPoRmFkta";
 
     console.log(`[WELCOME EMAIL DISPATCHER] Triggered for email: ${email}, name: ${fullName || "Guest"}`);
 
@@ -412,6 +412,8 @@ app.post("/api/email/send-welcome", async (req, res) => {
         template_id: templateId,
         user_id: publicKey,
         template_params: {
+          name: fullName || "Valued User",
+          email: email,
           to_email: email,
           to_name: fullName || "Valued User",
           user_email: email,
