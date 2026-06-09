@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
-import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User, Star, Sun, Moon } from "lucide-react";
+import React, { useState } from "react";
+import { Sparkles, FileText, Cpu, Compass, HelpCircle, LogIn, LogOut, User, Star, Sun, Moon, Menu, X } from "lucide-react";
 import { UserSession } from "../types";
 
 interface NavbarProps {
@@ -26,12 +26,17 @@ export default function Navbar({
   isDarkMode,
   onToggleDarkMode
 }: NavbarProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100 shadow-3xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo and Brand */}
         <button 
-          onClick={() => onTabChange("home")}
+          onClick={() => {
+            onTabChange("home");
+            setIsMenuOpen(false);
+          }}
           className="flex items-center gap-2.5 group focus:outline-none"
         >
           <div className="w-9.5 h-9.5 rounded-xl overflow-hidden hover:scale-105 transition-all duration-200 border border-slate-150 flex items-center justify-center bg-white shrink-0 shadow-sm group-hover:shadow-md">
@@ -46,7 +51,7 @@ export default function Navbar({
           </div>
         </button>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs (Desktop/Tablet default) */}
         <nav className="hidden md:flex items-center gap-1.5">
           {[
             { id: "home", label: "Home", icon: Compass },
@@ -117,8 +122,54 @@ export default function Navbar({
               Sign In
             </button>
           )}
+
+          {/* Toggle Menu Button for Mobile/Tablet */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition focus:outline-none"
+            aria-label="Toggle Navigation Menu"
+          >
+            {isMenuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Dropdown Mobile & Tablet Menu Bar */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md px-4 py-3 space-y-1 shadow-md animate-in slide-in-from-top duration-200">
+          {[
+            { id: "home", label: "Home", icon: Compass },
+            { id: "builder", label: "Resume Builder", icon: FileText },
+            { id: "ai-builder", label: "Full AI Architect", icon: Cpu },
+            { id: "reviews", label: "Reviews", icon: Star },
+            { id: "about", label: "About", icon: HelpCircle },
+          ].map((item) => {
+            const IconComponent = item.icon;
+            const isActive = currentTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onTabChange(item.id);
+                  setIsMenuOpen(false);
+                }}
+                className={`w-full px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-3 ${
+                  isActive 
+                    ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" 
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <IconComponent className={`w-4 h-4 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
+                <span className="text-left flex-1">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }
